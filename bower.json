@@ -8,7 +8,9 @@
   "main": ["lib/sweet-alert.js", "lib/sweet-alert.css"],
   "keywords": [
     "alert",
-    "modal"
+    "modal",
+    "some text",
+    "upsource-frontend\error.log"
   ],
   "repository": {
     "type": "git",
