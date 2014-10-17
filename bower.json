@@ -10,7 +10,8 @@
     "alert",
     "modal",
     "some text",
-    "upsource-frontend\error.log"
+    "upsource-frontend\error.log",
+    "new branch"
   ],
   "repository": {
     "type": "git",
