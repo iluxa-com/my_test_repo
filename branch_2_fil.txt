@@ -13,7 +13,7 @@ by
 22222222222222222
 
 
-View revision diff (all changes in revision files are displayed correctly)
+View revision diff (all changes in revision 12345 are displayed correctly)
 
 
 
