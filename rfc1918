@@ -1,8 +1,4 @@
-Status of this Memo
 
-   This document specifies an Internet Best Current Practices for the
-   Internet Community, and requests discussion and suggestions for
-   improvements.  Distribution of this memo is unlimited.
 
 1. Introduction
 
@@ -18,7 +14,7 @@ Status of this Memo
    potentially costly effort to renumber hosts and networks between
    public and private.
 
-2. Motivation
+3. Motivation
 
    With the proliferation of TCP/IP technology worldwide, including
    outside the Internet itself, an increasing number of non-connected
