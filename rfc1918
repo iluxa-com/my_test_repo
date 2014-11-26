@@ -6,7 +6,7 @@ Status of this Memo
 
 1. Introduction
 
-   For the purposes of this document, an enterprise is an entity
+      For the purposes of this document, an enterprise is an entity
    autonomously operating a network using TCP/IP and in particular
    determining the addressing plan and address assignments within that
    network.
