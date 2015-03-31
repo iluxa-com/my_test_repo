@@ -1485,8 +1485,12 @@
     <echo message="##teamcity[publishArtifacts '${init-upsource-for-functional-tests.zip}']"/>
   </target>
 
-  <target name="publish.rpm">
-    <antcall target="rpm.publish.rpm" />
+  <target name="make.and.publish.packages">
+    <build.all.packages.and.publish
+        product.build.dir="${basedir}/out/package"
+        product.output.dir="${basedir}/dist"
+        product.properties.file="${basedir}/package/package.properties"
+        product.zip.dir="${basedir}/deps" />
   </target>
 
   <target name="make-deploy.zip">
