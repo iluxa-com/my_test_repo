@@ -157,19 +157,19 @@
       </actions>
     </execute_on_changed>
 
-    <get src="https://services.gradle.org/distributions/gradle-${gradle.for.tests.version}-all.zip"
-         dest="${common.deps.download.dir}/gradle-${gradle.for.tests.version}-all.zip"
+    <get src="https://services.gradle.org/distributions/gradle-${gradle.for.tests.version}-bin.zip"
+         dest="${common.deps.download.dir}/gradle-${gradle.for.tests.version}-bin.zip"
          skipexisting="true" />
     <execute_on_changed id="gradle-for-tests">
       <input>
-        <pathelement path="${common.deps.download.dir}/gradle-${gradle.for.tests.version}-all.zip"/>
+        <pathelement path="${common.deps.download.dir}/gradle-${gradle.for.tests.version}-bin.zip"/>
         <pathelement path="${common.deps}/gradle-for-tests/changelog.txt"/>
       </input>
 
       <actions>
         <delete dir="${common.deps}/gradle-for-tests"/>
 
-        <unzip src="${common.deps.download.dir}/gradle-${gradle.for.tests.version}-all.zip" dest="${common.deps}"/>
+        <unzip src="${common.deps.download.dir}/gradle-${gradle.for.tests.version}-bin.zip" dest="${common.deps}"/>
         <move file="${common.deps}/gradle-${gradle.for.tests.version}" tofile="${common.deps}/gradle-for-tests"/>
         <chmod perm="ugo+rx">
           <fileset dir="${common.deps}/gradle-for-tests/bin"/>
