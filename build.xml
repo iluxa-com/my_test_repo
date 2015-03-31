@@ -413,6 +413,25 @@
       </actions>
     </execute_on_changed>
 
+    <!-- npm -->
+    <get
+        src="https://github.com/npm/npm/archive/v${npm.version}.zip"
+        dest="${common.deps.download.dir}/npm-${npm.version}.zip"
+        skipexisting="true"/>
+    <execute_on_changed id="npm-dist">
+      <input>
+        <pathelement path="${common.deps.download.dir}/npm-${npm.version}.zip"/>
+        <pathelement path="${common.deps}/cassandra/CHANGES.txt"/>
+      </input>
+
+      <actions>
+        <delete dir="${common.deps}/npm"/>
+
+        <unzip src="${common.deps.download.dir}/npm-${npm.version}.zip" dest="${common.deps}"/>
+        <move file="${common.deps}/npm-${npm.version}" tofile="${common.deps}/npm"/>
+      </actions>
+    </execute_on_changed>
+
     <!-- hsqldb -->
     <download_dependency id="hsqldb">
       <dependencies filesetid="hsqldb.fileset" sourcesFilesetId="hsqldb.sources.fileset"
