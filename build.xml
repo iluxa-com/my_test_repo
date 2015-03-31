@@ -591,6 +591,11 @@
       </actions>
     </execute_on_changed>
 
+    <local name="output.js" />
+    <local name="output.css" />
+    <property name="output.js" value="${dep.ring-ui-2.root}/ring-2.0/ring.min.js" />
+    <property name="output.css" value="${dep.ring-ui-2.root}/css/ring.min.css" />
+
     <execute_on_changed id="node-webpack-build">
       <input>
         <!-- Depend on nodejs & npm versions -->
@@ -605,12 +610,31 @@
         <pathelement path="${dep.ring-ui-2.root}/.npmrc"/>
 
         <!-- Depend on outputs -->
-        <pathelement path="${dep.ring-ui-2.root}/ring-2.0/ring.min.js"/>
-        <pathelement path="${dep.ring-ui-2.root}/css/ring.min.css"/>
+        <pathelement path="${output.js}"/>
+        <pathelement path="${output.css}"/>
       </input>
 
       <actions>
+        <delete file="${output.js}" />
+        <delete file="${output.css}" />
+
         <call.node args="node_modules/webpack/bin/webpack.js" dir="${dep.ring-ui-2.root}" />
+
+        <fail message="No output ${output.js} from webpack">
+          <condition>
+            <not>
+              <available file="${output.js}" />
+            </not>
+          </condition>
+        </fail>
+
+        <fail message="No output ${output.css} from webpack">
+          <condition>
+            <not>
+              <available file="${output.css}" />
+            </not>
+          </condition>
+        </fail>
       </actions>
     </execute_on_changed>
   </target>
