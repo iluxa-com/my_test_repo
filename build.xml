@@ -209,7 +209,6 @@
     <execute_on_changed id="ring-ui">
       <input>
         <pathelement path="${common.deps.download.dir}/ring-ui-component-${dep.ring-ui.version}.tar.gz"/>
-        <pathelement path="${dep.ring-ui.root}/ring-upsource.js"/>
       </input>
 
       <actions>
@@ -222,7 +221,6 @@
             <include name="fonts/**"/>
             <include name="ring-lib.**"/>
             <include name="ring-upsource.**"/>
-            <include name="ring-upsource-oauth.**"/>
           </patternset>
         </untar>
 
@@ -255,8 +253,14 @@
             <include name="package/ring2.js" />
           </patternset>
         </untar>
+
         <rename src="${dep.ring-ui-2.root}/package/ring2.js" dest="${dep.ring-ui-2.root}/ring.min.js" />
         <delete dir="${dep.ring-ui-2.root}/package" />
+
+        <mkdir dir="${dep.ring-ui-2.monitoring.root}"/>
+        <copy todir="${dep.ring-ui-2.monitoring.root}">
+          <fileset dir="${dep.ring-ui-2.root}" />
+        </copy>
       </actions>
     </execute_on_changed>
 
@@ -410,6 +414,25 @@
         <chmod perm="ugo+rx">
           <fileset dir="${common.deps}/cassandra/bin"/>
         </chmod>
+      </actions>
+    </execute_on_changed>
+
+    <!-- npm -->
+    <get
+        src="https://github.com/npm/npm/archive/v${npm.version}.zip"
+        dest="${common.deps.download.dir}/npm-${npm.version}.zip"
+        skipexisting="true"/>
+    <execute_on_changed id="npm-dist">
+      <input>
+        <pathelement path="${common.deps.download.dir}/npm-${npm.version}.zip"/>
+        <pathelement path="${common.deps}/cassandra/CHANGES.txt"/>
+      </input>
+
+      <actions>
+        <delete dir="${common.deps}/npm"/>
+
+        <unzip src="${common.deps.download.dir}/npm-${npm.version}.zip" dest="${common.deps}"/>
+        <move file="${common.deps}/npm-${npm.version}" tofile="${common.deps}/npm"/>
       </actions>
     </execute_on_changed>
 
@@ -636,6 +659,13 @@
     <antcall target="build-idea-plugin-14-debug"/>
     <antcall target="build-idea-plugin-14"/>
     <antcall target="build-idea-plugin-trunk"/>
+  </target>
+
+  <target name="validate-libraries-for-idea-plugin">
+    <ant antfile="${basedir}/frontend/frontend-idea/buildIdeaPlugin.xml"
+         target="validateLibraries" usenativebasedir="true">
+      <property name="project.dir" value="${basedir}"/>
+    </ant>
   </target>
 
   <target name="build-idea-plugin-14-debug" depends="download-idea-for-plugin-14">
@@ -1162,12 +1192,6 @@
     <copy todir="${bundle.home}/lib/upsource/www">
       <fileset dir="${deploy.dir}/www"/>
     </copy>
-
-    <!-- Use Ring Header from Hub -->
-    <move todir="${bundle.home}/lib/upsource/www/ring" overwrite="true" verbose="true">
-      <fileset dir="${bundle.home}/lib/upsource/www/ring" includes="ring-upsource-oauth.*" />
-      <globmapper from="ring-upsource-oauth.*" to="ring-upsource.*"/>
-    </move>
 
     <!-- vcs-settings -->
     <copy todir="${services}/vcs-settings">
