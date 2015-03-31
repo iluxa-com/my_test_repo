@@ -1021,10 +1021,10 @@
             zip.file.entry="jetbrains/jetpass/service/bean/jetPassServiceFactoryBeanConfiguration.xml">
           <actions>
             <replace file="@{tmp.folder}/@{zip.file.entry}" token="YouTrack Free Pack User"
-                     value="Upsource 1.1 Free 10 Users Pack"/>
+                     value="Upsource 2.0 Free 10 Users Pack"/>
             <replace file="@{tmp.folder}/@{zip.file.entry}"
                      token="fa210d1d87408e18c6cfb9e09991aa5f9781410fcf660e47a366fcf83d5d25085e4b41e7ffd54256424e32a3aac1d5ec7464d98421b1a3068c8642279d0e0d85cb2e569b0f20fc5174331e40fe2e09f4291d14d8058015a71ef2ab64c2847fc82f71e0038b4ebd53b7e0e4d6ec7348fe0a0598d8b78f253914aa4959a59eb997"
-                     value="7c2a735bf5464f55aa20f2b45202961c689506c6db9e5bb61204cdfcd6ef3663d736764e49fa90308baaf8723205c04a64d7fafb27cca2571a7e204004ee78c7fca39e3150c67ba7bf36f2a8949cef72dac60fa1e0be42e0716680d418cad924d4076079d53327f0a1bd1bbe56e5b00637eb519c31e3f3026d3e58642069e658"/>
+                     value="bec61c738621fb9bee6dfc650e0b23012d935564a6169ec44d45eb40fb07a52325f441c89c57d923ca83fa1b1a4d766655f90a365c1de49f1ed20292b2f0c72ed29abd20c8aa5f160eb5eba32f5d5b46523eea35674f07042a10cc6112e9fecc020c50890b51f6d374e36fb60cc37427daf09b238c09a88e09de8b9cfbefc254"/>
           </actions>
         </perform.action.in.zip.file.entry>
       </prepare-artifact>
