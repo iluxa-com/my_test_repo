@@ -413,25 +413,6 @@
       </actions>
     </execute_on_changed>
 
-    <!-- npm -->
-    <get
-        src="https://github.com/npm/npm/archive/v${npm.version}.zip"
-        dest="${common.deps.download.dir}/npm-${npm.version}.zip"
-        skipexisting="true"/>
-    <execute_on_changed id="npm-dist">
-      <input>
-        <pathelement path="${common.deps.download.dir}/npm-${npm.version}.zip"/>
-        <pathelement path="${common.deps}/cassandra/CHANGES.txt"/>
-      </input>
-
-      <actions>
-        <delete dir="${common.deps}/npm"/>
-
-        <unzip src="${common.deps.download.dir}/npm-${npm.version}.zip" dest="${common.deps}"/>
-        <move file="${common.deps}/npm-${npm.version}" tofile="${common.deps}/npm"/>
-      </actions>
-    </execute_on_changed>
-
     <!-- hsqldb -->
     <download_dependency id="hsqldb">
       <dependencies filesetid="hsqldb.fileset" sourcesFilesetId="hsqldb.sources.fileset"
@@ -555,6 +536,105 @@
         </chmod>
       </actions>
     </execute_on_changed>
+  </target>
+
+  <target name="fetch.nodejs.sdk">
+    <if>
+      <os family="windows" />
+
+      <then>
+        <property name="nodejs.bin" value="${common.deps.download.dir}/node-${nodejs.version}.exe" />
+        <get src="http://nodejs.org/dist/v${nodejs.version}/x64/node.exe"
+             dest="${nodejs.bin}" skipexisting="true"/>
+      </then>
+
+      <else>
+        <if>
+          <os family="mac"/>
+          <then>
+            <propery name="nodejs.arch" value="darwin-x64"/>
+          </then>
+
+          <else>
+            <!-- Let it be Linux -->
+            <propery name="nodejs.arch" value="linux-x64"/>
+          </else>
+        </if>
+
+        <get
+            src="http://nodejs.org/dist/v0.10.33/node-v${nodejs.version}-${nodejs.arch}.tar.gz"
+            dest="${common.deps.download.dir}/node-v${nodejs.version}-${nodejs.arch}.tar.gz"
+            skipexisting="true"/>
+        <execute_on_changed id="nodejs-unix">
+          <input>
+            <pathelement path="${common.deps.download.dir}/node-v${nodejs.version}-${nodejs.arch}.tar.gz"/>
+          </input>
+
+          <actions>
+            <delete dir="${common.deps.dir}/nodejs"/>
+            <delete dir="${common.deps.dir}/node-v${nodejs.version}-${nodejs.arch}"/>
+
+            <untar src="${common.deps.download.dir}/node-v${nodejs.version}-${nodejs.arch}.tar.gz" compression="gzip"
+                   dest="${common.deps.dir}"/>
+            <move file="${common.deps.dir}/node-v${nodejs.version}-${nodejs.arch}"
+                  tofile="${common.deps.dir}/nodejs"/>
+            <chmod perm="ugo+rx">
+              <fileset dir="${common.deps.dir}/nodejs/bin"/>
+            </chmod>
+          </actions>
+        </execute_on_changed>
+
+        <property name="nodejs.bin" value="${common.deps.dir}/nodejs/bin/node" />
+      </else>
+    </if>
+
+    <!-- npm -->
+    <get
+        src="https://github.com/npm/npm/archive/v${npm.version}.zip"
+        dest="${common.deps.download.dir}/npm-${npm.version}.zip"
+        skipexisting="true"/>
+
+    <property name="npm.dir" value="${common.deps}/npm" />
+
+    <execute_on_changed id="npm-dist">
+      <input>
+        <pathelement path="${common.deps.download.dir}/npm-${npm.version}.zip"/>
+        <pathelement path="${common.deps}/cassandra/CHANGES.txt"/>
+      </input>
+
+      <actions>
+        <delete dir="${npm.dir}"/>
+
+        <unzip src="${common.deps.download.dir}/npm-${npm.version}.zip" dest="${common.deps}"/>
+        <move file="${common.deps}/npm-${npm.version}" tofile="${npm.dir}"/>
+      </actions>
+    </execute_on_changed>
+  </target>
+
+  <macrodef name="call.node">
+    <attribute name="dir" />
+    <attribute name="args"/>
+
+    <sequential>
+      <exec executable="${nodejs.bin}" failonerror="true" dir="@{dir}">
+        <env key="NPM_CONFIG_CACHE" value="${basedir}/out/npm-cache" />
+
+        <arg line="@{args}" />
+      </exec>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="call.npm">
+    <attribute name="dir" />
+    <attribute name="args"/>
+
+    <sequential>
+      <call.node dir="@{dir}" args="${npm.dir}/cli.js @{args}" />
+    </sequential>
+  </macrodef>
+
+  <target name="test.node" depends="fetch.nodejs.sdk">
+    <call.npm args="config get cache" dir="${basedir}" />
   </target>
 
   <macrodef name="fetch.idea.for.plugin.macro">
