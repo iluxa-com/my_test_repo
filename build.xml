@@ -561,6 +561,8 @@
           </else>
         </if>
 
+        <property name="nodejs.bin" value="${common.deps}/nodejs/bin/node" />
+
         <get
             src="http://nodejs.org/dist/v0.10.33/node-v${nodejs.version}-${nodejs.arch}.tar.gz"
             dest="${common.deps.download.dir}/node-v${nodejs.version}-${nodejs.arch}.tar.gz"
@@ -568,23 +570,22 @@
         <execute_on_changed id="nodejs-unix">
           <input>
             <pathelement path="${common.deps.download.dir}/node-v${nodejs.version}-${nodejs.arch}.tar.gz"/>
+            <pathelement path="${nodejs.bin}"/>
           </input>
 
           <actions>
-            <delete dir="${common.deps.dir}/nodejs"/>
-            <delete dir="${common.deps.dir}/node-v${nodejs.version}-${nodejs.arch}"/>
+            <delete dir="${common.deps}/nodejs"/>
+            <delete dir="${common.deps}/node-v${nodejs.version}-${nodejs.arch}"/>
 
             <untar src="${common.deps.download.dir}/node-v${nodejs.version}-${nodejs.arch}.tar.gz" compression="gzip"
-                   dest="${common.deps.dir}"/>
-            <move file="${common.deps.dir}/node-v${nodejs.version}-${nodejs.arch}"
-                  tofile="${common.deps.dir}/nodejs"/>
+                   dest="${common.deps}"/>
+            <move file="${common.deps}/node-v${nodejs.version}-${nodejs.arch}"
+                  tofile="${common.deps}/nodejs"/>
             <chmod perm="ugo+rx">
-              <fileset dir="${common.deps.dir}/nodejs/bin"/>
+              <fileset dir="${common.deps}/nodejs/bin"/>
             </chmod>
           </actions>
         </execute_on_changed>
-
-        <property name="nodejs.bin" value="${common.deps.dir}/nodejs/bin/node" />
       </else>
     </if>
 
@@ -599,7 +600,7 @@
     <execute_on_changed id="npm-dist">
       <input>
         <pathelement path="${common.deps.download.dir}/npm-${npm.version}.zip"/>
-        <pathelement path="${common.deps}/cassandra/CHANGES.txt"/>
+        <pathelement path="${npm.dir}/cli.js"/>
       </input>
 
       <actions>
