@@ -266,10 +266,14 @@
         <delete dir="${dep.ring-ui-2.monitoring.root}"/>
 
         <mkdir dir="${dep.ring-ui-2.root}"/>
-        <untar src="${common.deps.download.dir}/ring-ui-component-${dep.ring-ui-2.version}.tar.gz" dest="${dep.ring-ui-2.root}" compression="gzip" />
+        <untar src="${common.deps.download.dir}/ring-ui-component-${dep.ring-ui-2.version}.tar.gz" dest="${dep.ring-ui-2.root}" compression="gzip">
+          <patternset>
+            <include name="package/ring2.js" />
+          </patternset>
+        </untar>
 
         <rename src="${dep.ring-ui-2.root}/package/ring2.js" dest="${dep.ring-ui-2.root}/ring.min.js" />
-        <!--delete dir="${dep.ring-ui-2.root}/package" /-->
+        <delete dir="${dep.ring-ui-2.root}/package" />
 
         <mkdir dir="${dep.ring-ui-2.monitoring.root}"/>
         <copy todir="${dep.ring-ui-2.monitoring.root}">
@@ -629,10 +633,6 @@
     </execute_on_changed>
   </target>
 
-  <target name="test.node" depends="fetch.nodejs.sdk">
-    <call.npm args="config get cache" dir="${basedir}" />
-  </target>
-
   <macrodef name="fetch.idea.for.plugin.macro">
     <attribute name="id"/>
 
@@ -678,7 +678,7 @@
     <exec
         dir="${basedir}/out/hypertable-${hypertable.version}-${hypertable.arch}/opt/hypertable/${hypertable.version}/bin"
         executable="/bin/bash">
-      <arg value="./start-all-servers.sh"/>
+      <arg value="./ht-start-all-servers.sh"/>
       <arg value="local"/>
     </exec>
   </target>
@@ -687,7 +687,7 @@
     <exec
         dir="${basedir}/out/hypertable-${hypertable.version}-${hypertable.arch}/opt/hypertable/${hypertable.version}/bin"
         executable="/bin/bash">
-      <arg value="./stop-servers.sh"/>
+      <arg value="./ht-stop-servers.sh"/>
     </exec>
   </target>
 
