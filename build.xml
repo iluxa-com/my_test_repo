@@ -41,7 +41,7 @@
              classname="com.jetbrains.launcher.ant.PrepareLauncherDistTask"/>
   </target>
 
-  <target name="fetch.dependencies" depends="fetch.launcher">
+  <target name="fetch.dependencies" depends="fetch.launcher, fetch.nodejs.sdk">
     <echoxml file="${basedir}/out/maven-settings.xml">
       <settings>
         <localRepository>${common.deps.download.dir}/m2-cache</localRepository>
@@ -218,65 +218,8 @@
       </actions>
     </execute_on_changed>
 
-    <!-- Ring UI Library 1.0  -->
-    <download.and.pin
-        artifact.build.number="${dep.ring-ui.version}"
-        artifact.build.type="${dep.ring-ui.buildTypeId}"
-        artifact.name="ring-ui-component.tar.gz"
-        file="${common.deps.download.dir}/ring-ui-component-${dep.ring-ui.version}.tar.gz"/>
-    <execute_on_changed id="ring-ui">
-      <input>
-        <pathelement path="${common.deps.download.dir}/ring-ui-component-${dep.ring-ui.version}.tar.gz"/>
-      </input>
-
-      <actions>
-        <delete dir="${dep.ring-ui.root}"/>
-        <delete dir="${dep.ring-ui.monitoring.root}"/>
-
-        <mkdir dir="${dep.ring-ui.root}"/>
-        <untar src="${common.deps.download.dir}/ring-ui-component-${dep.ring-ui.version}.tar.gz" dest="${dep.ring-ui.root}" compression="gzip">
-          <patternset>
-            <include name="fonts/**"/>
-            <include name="ring-lib.**"/>
-            <include name="ring-upsource.**"/>
-          </patternset>
-        </untar>
-
-        <mkdir dir="${dep.ring-ui.monitoring.root}"/>
-        <copy todir="${dep.ring-ui.monitoring.root}">
-          <fileset dir="${dep.ring-ui.root}" />
-        </copy>
-      </actions>
-    </execute_on_changed>
-
-    <!-- Ring UI Library 2.0  -->
-    <download.and.pin
-        artifact.build.number="${dep.ring-ui-2.version}"
-        artifact.build.type="${dep.ring-ui-2.buildTypeId}"
-        artifact.name="ring-ui-component.tar.gz"
-        file="${common.deps.download.dir}/ring-ui-component-${dep.ring-ui-2.version}.tar.gz"/>
-    <execute_on_changed id="ring-ui-2">
-      <input>
-        <pathelement path="${common.deps.download.dir}/ring-ui-component-${dep.ring-ui-2.version}.tar.gz"/>
-        <pathelement path="${dep.ring-ui-2.root}/ring2.js"/>
-      </input>
-
-      <actions>
-        <delete dir="${dep.ring-ui-2.root}"/>
-        <delete dir="${dep.ring-ui-2.monitoring.root}"/>
-
-        <mkdir dir="${dep.ring-ui-2.root}"/>
-        <untar src="${common.deps.download.dir}/ring-ui-component-${dep.ring-ui-2.version}.tar.gz" dest="${dep.ring-ui-2.root}" compression="gzip" />
-
-        <rename src="${dep.ring-ui-2.root}/package/ring2.js" dest="${dep.ring-ui-2.root}/ring.min.js" />
-        <!--delete dir="${dep.ring-ui-2.root}/package" /-->
-
-        <mkdir dir="${dep.ring-ui-2.monitoring.root}"/>
-        <copy todir="${dep.ring-ui-2.monitoring.root}">
-          <fileset dir="${dep.ring-ui-2.root}" />
-        </copy>
-      </actions>
-    </execute_on_changed>
+    <call.npm args="install" dir="${dep.ring-ui-2.root}" />
+    <call.npm args="run build" dir="${dep.ring-ui-2.root}" />
 
     <!-- hub client -->
     <download.and.pin
