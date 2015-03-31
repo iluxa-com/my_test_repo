@@ -678,7 +678,7 @@
     <exec
         dir="${basedir}/out/hypertable-${hypertable.version}-${hypertable.arch}/opt/hypertable/${hypertable.version}/bin"
         executable="/bin/bash">
-      <arg value="./start-all-servers.sh"/>
+      <arg value="./ht-start-all-servers.sh"/>
       <arg value="local"/>
     </exec>
   </target>
@@ -687,7 +687,7 @@
     <exec
         dir="${basedir}/out/hypertable-${hypertable.version}-${hypertable.arch}/opt/hypertable/${hypertable.version}/bin"
         executable="/bin/bash">
-      <arg value="./stop-servers.sh"/>
+      <arg value="./ht-stop-servers.sh"/>
     </exec>
   </target>
 
