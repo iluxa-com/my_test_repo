@@ -87,23 +87,20 @@
     <download.and.pin
         artifact.build.number="${vcs.settings.build.number}"
         artifact.build.type="${vcs.settings.build.type}"
-        artifact.name="vcs-settings-standalone.zip"
-        file="${common.deps.download.dir}/vcs-settings-${vcs.settings.build.number}.zip"/>
-    <!-- Cleanup old stuff -->
-    <delete dir="${basedir}/out/vcs-worker"/>
-    <delete dir="${basedir}/out/vcs-settings-client"/>
-
+        artifact.name="vcs-standalone.zip"
+        file="${common.deps.download.dir}/vcs-${vcs.settings.build.number}.zip"/>
     <execute_on_changed id="vcs-settings">
       <input>
-        <pathelement location="${common.deps.download.dir}/vcs-settings-${vcs.settings.build.number}.zip"/>
-        <pathelement location="${basedir}/out/vcs-settings/vcs-settings-build.txt"/>
+        <pathelement location="${common.deps.download.dir}/vcs-${vcs.settings.build.number}.zip"/>
+        <pathelement location="${basedir}/out/vcs-settings/vcs-build.txt"/>
       </input>
       <actions>
         <delete dir="${basedir}/out/vcs-settings"/>
         <mkdir dir="${basedir}/out/vcs-settings"/>
-        <unzip src="${common.deps.download.dir}/vcs-settings-${vcs.settings.build.number}.zip" dest="${basedir}/out/vcs-settings"/>
+        <unzip src="${common.deps.download.dir}/vcs-${vcs.settings.build.number}.zip" dest="${basedir}/out/vcs-settings"/>
 
         <propertyfile comment="Updated with Upsource build" file="${basedir}/out/vcs-settings/service.properties">
+          <entry key="id" value="vcs-settings"/>
           <entry key="after" value="hub"/>
           <entry key="before" operation="del"/>
         </propertyfile>
@@ -1529,11 +1526,11 @@
     <mkdir dir="${dist.dir}"/>
     <delete file="${deploy.zip}"/>
     <zip file="${deploy.zip}">
-      <zipfileset dir="${deploy.dir}" excludes="bin/** vcs-settings/bin/** tools/maven/bin/** **/*.sh"/>
+      <zipfileset dir="${deploy.dir}" excludes="bin/** vcs-settings/bin/** lib/tools/maven/bin/** **/*.sh"/>
       <zipfileset dir="${deploy.dir}" filemode="755" includes="**/*.sh"/>
 
       <zipfileset dir="${deploy.dir}/bin" filemode="755" prefix="bin" excludes="**/*.sh"/>
-      <zipfileset dir="${deploy.dir}/tools/maven/bin" filemode="755" prefix="tools/maven/bin" excludes="**/*.sh"/>
+      <zipfileset dir="${deploy.dir}/lib/tools/maven/bin" filemode="755" prefix="lib/tools/maven/bin" excludes="**/*.sh"/>
       <zipfileset dir="${deploy.dir}/vcs-settings/bin" filemode="755" prefix="vcs-settings/bin" excludes="**/*.sh"/>
     </zip>
   </target>
