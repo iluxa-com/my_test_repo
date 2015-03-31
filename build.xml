@@ -215,6 +215,19 @@
       </actions>
     </execute_on_changed>
 
+    <execute_on_changed id="npm-clear-modules">
+      <input>
+        <pathelement path="${nodejs.bin}"/>
+        <pathelement path="${npm.dir}/CHANGELOG.md"/>
+      </input>
+
+      <actions>
+        <!-- Clear modules and caches on npm or nodejs update -->
+        <delete dir="${dep.ring-ui-2.root}/node_modules" />
+        <delete dir="${npm.cache.dir}" />
+      </actions>
+    </execute_on_changed>
+
     <execute_on_changed id="npm-install">
       <input>
         <pathelement path="${nodejs.bin}"/>
@@ -228,7 +241,28 @@
       </actions>
     </execute_on_changed>
 
-    <call.node args="node_modules/webpack/bin/webpack.js" dir="${dep.ring-ui-2.root}" />
+    <execute_on_changed id="node-webpack-build">
+      <input>
+        <!-- Depend on nodejs & npm versions -->
+        <pathelement path="${nodejs.bin}"/>
+        <pathelement path="${npm.dir}/CHANGELOG.md"/>
+
+        <!-- Depend on inputs -->
+        <pathelement path="${dep.ring-ui-2.root}/scripts/ring-upsource.js"/>
+        <pathelement path="${dep.ring-ui-2.root}/scripts/bundle.scss"/>
+        <pathelement path="${dep.ring-ui-2.root}/package.json"/>
+        <pathelement path="${dep.ring-ui-2.root}/webpack.config.js"/>
+        <pathelement path="${dep.ring-ui-2.root}/.npmrc"/>
+
+        <!-- Depend on outputs -->
+        <pathelement path="${dep.ring-ui-2.root}/ring-2.0/ring.min.js"/>
+        <pathelement path="${dep.ring-ui-2.root}/css/ring.min.css"/>
+      </input>
+
+      <actions>
+        <call.node args="node_modules/webpack/bin/webpack.js" dir="${dep.ring-ui-2.root}" />
+      </actions>
+    </execute_on_changed>
 
     <!-- hub client -->
     <download.and.pin
