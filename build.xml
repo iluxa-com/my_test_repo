@@ -31,8 +31,7 @@
       </input>
 
       <actions>
-        <delete dir="${dep.launcher.root}"/>
-        <mkdir dir="${dep.launcher.root}"/>
+        <recreate-dir dir="${dep.launcher.root}"/>
         <unzip src="${common.deps.download.dir}/jet-launcher-from-bundle-${dep.bundle.version}.zip" dest="${dep.launcher.root}"/>
       </actions>
     </execute_on_changed>
@@ -61,12 +60,12 @@
     <download.and.pin
         artifact.build.number="${named-frames.build.number}"
         artifact.build.type="${named-frames.build.type}"
-        artifact.name="named-frames-0.1.0-SNAPSHOT-${named-frames.build.number}.jar "
+        artifact.name="named-frames-0.1.0-SNAPSHOT-${named-frames.build.number}.jar"
         file="${common.deps.download.dir}/named-frames-${named-frames.build.number}.jar"/>
     <download.and.pin
         artifact.build.number="${named-frames.build.number}"
         artifact.build.type="${named-frames.build.type}"
-        artifact.name="named-frames-0.1.0-SNAPSHOT-${named-frames.build.number}-sources.jar "
+        artifact.name="named-frames-0.1.0-SNAPSHOT-${named-frames.build.number}-sources.jar"
         file="${common.deps.download.dir}/named-frames-${named-frames.build.number}-sources.jar"/>
     <execute_on_changed id="named-frames">
       <input>
@@ -90,12 +89,6 @@
         artifact.build.type="${vcs.settings.build.type}"
         artifact.name="vcs-settings-standalone.zip"
         file="${common.deps.download.dir}/vcs-settings-${vcs.settings.build.number}.zip"/>
-    <download.and.pin
-        artifact.build.number="${vcs.worker.build.number}"
-        artifact.build.type="${vcs.worker.build.type}"
-        artifact.name="vcs-embedded.zip"
-        file="${common.deps.download.dir}/vcs-embedded-${vcs.worker.build.number}.zip"/>
-
     <!-- Cleanup old stuff -->
     <delete dir="${basedir}/out/vcs-worker"/>
     <delete dir="${basedir}/out/vcs-settings-client"/>
@@ -109,47 +102,72 @@
         <delete dir="${basedir}/out/vcs-settings"/>
         <mkdir dir="${basedir}/out/vcs-settings"/>
         <unzip src="${common.deps.download.dir}/vcs-settings-${vcs.settings.build.number}.zip" dest="${basedir}/out/vcs-settings"/>
-      </actions>
-    </execute_on_changed>
-    <execute_on_changed id="vcs-embedded">
-      <input>
-        <pathelement location="${common.deps.download.dir}/vcs-embedded-${vcs.worker.build.number}.zip"/>
-        <pathelement location="${basedir}/out/vcs-embedded/vcs-service-api.jar"/>
-      </input>
-      <actions>
-        <delete dir="${basedir}/out/vcs-embedded" />
-        <mkdir dir="${basedir}/out/vcs-embedded"/>
-        <unzip src="${common.deps.download.dir}/vcs-embedded-${vcs.worker.build.number}.zip" dest="${basedir}/out/vcs-embedded" />
-        <move todir="${basedir}/out/vcs-embedded">
-          <fileset dir="${basedir}/out/vcs-embedded/vcs-service/api">
-            <include name="**/*.jar"/>
-          </fileset>
-          <fileset dir="${basedir}/out/vcs-embedded/jet-modules/api">
-            <include name="**/*.jar"/>
-          </fileset>
-          <fileset dir="${basedir}/out/vcs-embedded/vcs-worker-settings/api">
-            <include name="**/*.jar"/>
-          </fileset>
-        </move>
-        <delete dir="${basedir}/out/vcs-embedded/vcs-service/api"/>
-        <delete dir="${basedir}/out/vcs-embedded/jet-modules"/>
-        <delete dir="${basedir}/out/vcs-embedded/vcs-worker-settings"/>
+
+        <propertyfile comment="Updated with Upsource build" file="${basedir}/out/vcs-settings/service.properties">
+          <entry key="after" value="hub"/>
+          <entry key="before" operation="del"/>
+        </propertyfile>
       </actions>
     </execute_on_changed>
 
+    <download.and.pin
+        artifact.build.type="${vcs-worker.build-type}"
+        artifact.build.number="${vcs-worker.build-number}"
+        artifact.name="vcs-embedded.zip"
+        file="${common.deps.download.dir}/vcs-worker-embedded-${vcs-worker.build-number}.zip"/>
+
+    <execute_on_changed id="vcs-worker" output.dir="${common.deps}">
+      <input>
+        <pathelement path="${common.deps.download.dir}/vcs-worker-embedded-${vcs-worker.build-number}.zip"/>
+        <pathelement path="${basedir}/plugins/vcs-service/vcs-service-plugin/vcs-worker.properties"/>
+      </input>
+      <actions>
+        <recreate-dir dir="${basedir}/deps/vcs-worker"/>
+        <unzip src="${common.deps.download.dir}/vcs-worker-embedded-${vcs-worker.build-number}.zip" dest="${basedir}/deps/vcs-worker"/>
+
+        <copy file="${basedir}/plugins/vcs-service/vcs-service-plugin/vcs-worker.properties" tofile="${basedir}/deps/vcs-worker/impl/conf/vcs-worker.properties" overwrite="true"/>
+        <copy file="${basedir}/plugins/vcs-service/vcs-service-plugin/vcs-worker.properties" tofile="${basedir}/deps/vcs-worker/impl/conf/vcs-worker.properties.upsource" overwrite="true"/>
+
+        <delete verbose="true">
+          <fileset dir="${basedir}/deps/vcs-worker/impl/lib">
+            <include name="*log4j*"/>
+            <include name="*slf4j*"/>
+            <include name="*commons-logging*"/>
+          </fileset>
+        </delete>
+
+        <unzip src="${basedir}/deps/vcs-worker/impl/plugins/jetbrains.git.zip"
+               dest="${basedir}/deps/vcs-worker/impl/plugins/jetbrains.git"/>
+        <unzip src="${basedir}/deps/vcs-worker/impl/plugins/mercurial.zip"
+               dest="${basedir}/deps/vcs-worker/impl/plugins/mercurial"/>
+        <delete file="${basedir}/deps/vcs-worker/impl/plugins/jetbrains.git.zip"/>
+        <delete file="${basedir}/deps/vcs-worker/impl/plugins/mercurial.zip"/>
+        <delete dir="${basedir}/deps/vcs-worker/impl/plugins/tfs"/>
+      </actions>
+    </execute_on_changed>
+
+    <maven_fetch dest="trove">
+      <dependency groupId="net.sf.trove4j" artifactId="trove4j" version="3.0.3"/>
+    </maven_fetch>
+
+    <maven_fetch dest="jackson-2.4">
+      <dependency groupId="com.fasterxml.jackson.core" artifactId="jackson-databind" version="2.4.4"/>
+      <dependency groupId="com.fasterxml.jackson.module" artifactId="jackson-module-mrbean" version="2.4.4"/>
+    </maven_fetch>
+
     <get
-        src="http://maven.labs.intellij.net/central-proxy/org/apache/maven/apache-maven/${maven.version}/apache-maven-${maven.version}-bin.tar.gz"
-        dest="${common.deps.download.dir}/apache-maven-${maven.version}-bin.tar.gz"
+        src="http://maven.labs.intellij.net/central-proxy/org/apache/maven/apache-maven/${maven.version}/apache-maven-${maven.version}-bin.zip"
+        dest="${common.deps.download.dir}/apache-maven-${maven.version}-bin.zip"
         skipexisting="true"/>
     <execute_on_changed id="maven">
       <input>
-        <pathelement path="${common.deps.download.dir}/apache-maven-${maven.version}-bin.tar.gz"/>
+        <pathelement path="${common.deps.download.dir}/apache-maven-${maven.version}-bin.zip"/>
         <pathelement path="${basedir}/out/maven/README.txt"/>
       </input>
 
       <actions>
         <delete dir="${basedir}/out/maven"/>
-        <untar compression="gzip" src="${common.deps.download.dir}/apache-maven-${maven.version}-bin.tar.gz" dest="${basedir}/out"/>
+        <unzip src="${common.deps.download.dir}/apache-maven-${maven.version}-bin.zip" dest="${basedir}/out"/>
         <move file="${basedir}/out/apache-maven-${maven.version}" tofile="${basedir}/out/maven"/>
         <chmod perm="ugo+rx">
           <fileset dir="${basedir}/out/maven"/>
@@ -329,7 +347,9 @@
     <download_dependency id="datastax-driver">
       <dependencies filesetid="datastax-driver.fileset" sourcesFilesetId="datastax-driver.sources.fileset"
                     settingsfile="${basedir}/out/maven-settings.xml">
-        <dependency groupId="com.datastax.cassandra" artifactId="cassandra-driver-core" version="2.1.3">
+        <remoteRepository id="internal-thirdparty" url="http://maven.labs.intellij.net/thirdparty" />
+
+        <dependency groupId="com.datastax.cassandra" artifactId="cassandra-driver-core" version="2.1.4">
           <exclusion groupId="org.slf4j" artifactId="slf4j-api"/>
           <exclusion groupId="org.slf4j" artifactId="slf4j-log4j12"/>
           <exclusion groupId="commons-logging" artifactId="commons-logging"/>
@@ -349,52 +369,64 @@
     </download_dependency>
 
     <!-- IDEA -->
-    <for list="core-upsource/intellij-core-upsource.jar,core-upsource/css-plugin.jar,core-upsource/groovy-plugin.jar,core-upsource/properties-plugin.jar,core-upsource/javascript-plugin.jar,core-upsource/ruby-plugin.jar,sources.zip" param="idea.file.name">
-      <sequential>
-        <local name="idea.file.basename" />
-        <basename property="idea.file.basename" file="@{idea.file.name}" />
+    <echo message="Downloading IDEA ${idea.version}" />
+    <download.and.pin
+        artifact.build.number="${idea.version}"
+        artifact.build.type="${idea.buildTypeId}"
+        artifact.name="idea-for-upsource-${idea.version}.zip"
+        file="${common.deps.download.dir}/idea-for-upsource-${idea.version}.zip"
+        tag.build="false"/>
+    <execute_on_changed id="idea-for-upsource-${idea.version}.zip">
+      <input>
+        <pathelement path="${common.deps.download.dir}/idea-for-upsource-${idea.version}.zip"/>
+        <pathelement path="${basedir}/lib/idea/idea-for-upsource.zip"/>
+      </input>
 
-        <echo message="Downloading IDEA file ${idea.file.basename} (full @{idea.file.name})" />
+      <actions>
+        <delete dir="${basedir}/lib/idea/lib"/>
+        <delete dir="${basedir}/lib/idea/plugins"/>
+        <unzip src="${common.deps.download.dir}/idea-for-upsource-${idea.version}.zip" dest="${basedir}/lib/idea"/>
+        <delete file="${basedir}/lib/idea/lib/log4j.jar"/>
+        <delete file="${basedir}/lib/idea/lib/guava-17.0.jar"/>
+        <delete file="${basedir}/lib/idea/lib/netty-all-4.1.0.Beta3.jar"/>
+        <delete file="${basedir}/lib/idea/lib/protobuf-2.5.0.jar"/>
+        <delete file="${basedir}/lib/idea/lib/rhino-js-1_7R4.jar"/>
+      </actions>
+    </execute_on_changed>
 
-        <download.and.pin
-            artifact.build.number="${idea.version}"
-            artifact.build.type="${idea.buildTypeId}"
-            artifact.name="@{idea.file.name}"
-            file="${common.deps.download.dir}/idea-${idea.version}-${idea.file.basename}"
-            tag.build="false"/>
-        <execute_on_changed id="idea-${idea.file.basename}">
-          <input>
-            <pathelement path="${common.deps.download.dir}/idea-${idea.version}-${idea.file.basename}"/>
-            <pathelement path="${basedir}/lib/idea/${idea.file.basename}"/>
-          </input>
+    <echo message="Downloading IDEA sources" />
+    <download.and.pin
+        artifact.build.number="${idea.version}"
+        artifact.build.type="${idea.buildTypeId}"
+        artifact.name="sources-${idea.version}.zip"
+        file="${common.deps.download.dir}/idea-sources-${idea.version}.zip"
+        tag.build="false"/>
+    <execute_on_changed id="idea-sources-${idea.version}.zip">
+      <input>
+        <pathelement path="${common.deps.download.dir}/idea-sources-${idea.version}.zip"/>
+        <pathelement path="${basedir}/lib/idea/idea-sources-${idea.version}.zip"/>
+      </input>
 
-          <actions>
-            <copy file="${common.deps.download.dir}/idea-${idea.version}-${idea.file.basename}"
-                  tofile="${basedir}/lib/idea/${idea.file.basename}" overwrite="true"/>
-          </actions>
-        </execute_on_changed>
-      </sequential>
-    </for>
+      <actions>
+        <copy file="${common.deps.download.dir}/idea-sources-${idea.version}.zip"
+              tofile="${basedir}/lib/idea/sources.zip" overwrite="true"/>
+      </actions>
+    </execute_on_changed>
 
     <!-- IDEA for plugin -->
     <antcall target="download-idea-for-plugin-14"/>
 
-    <!-- cassandra -->
-    <download_dependency id="cassandra-all">
-      <dependencies filesetid="cassandra-all.fileset" sourcesFilesetId="cassandra-all.sources.fileset"
+    <!-- janino, required for logback.xml conditional processing -->
+    <download_dependency id="janino">
+      <dependencies filesetid="janino.fileset" sourcesFilesetId="janino.sources.fileset"
                     settingsfile="${basedir}/out/maven-settings.xml">
-        <dependency groupId="org.apache.cassandra" artifactId="cassandra-all" version="${cassandra.server.version}"/>
-        <dependency groupId="net.java.dev.jna" artifactId="jna" version="4.1.0" />
         <dependency groupId="org.codehaus.janino" artifactId="janino" version="2.6.1" />
       </dependencies>
     </download_dependency>
 
-    <pathconvert pathsep="${line.separator}" property="cassandra.classpath" refid="cassandra-all.files"/>
-    <echo file="${basedir}/out/cassandra.classpath">${cassandra.classpath}</echo>
-
     <!-- cassandra binary distribution -->
     <get
-        src="http://maven.labs.intellij.net/central-proxy/org/apache/cassandra/apache-cassandra/${cassandra.server.version}/apache-cassandra-${cassandra.server.version}-bin.tar.gz"
+        src="http://maven.labs.intellij.net/${cassandra.server.repo}/org/apache/cassandra/apache-cassandra/${cassandra.server.version}/apache-cassandra-${cassandra.server.version}-bin.tar.gz"
         dest="${common.deps.download.dir}/apache-cassandra-${cassandra.server.version}-bin.tar.gz"
         skipexisting="true"/>
     <execute_on_changed id="cassandra-server-dist">
@@ -410,6 +442,25 @@
         <chmod perm="ugo+rx">
           <fileset dir="${common.deps}/cassandra/bin"/>
         </chmod>
+      </actions>
+    </execute_on_changed>
+
+    <!-- cassandra sources distribution -->
+    <get
+        src="http://maven.labs.intellij.net/${cassandra.server.repo}/org/apache/cassandra/apache-cassandra/${cassandra.server.version}/apache-cassandra-${cassandra.server.version}-src.tar.gz"
+        dest="${common.deps.download.dir}/apache-cassandra-${cassandra.server.version}-src.tar.gz"
+        skipexisting="true"/>
+    <execute_on_changed id="cassandra-server-sources">
+      <input>
+        <pathelement path="${common.deps.download.dir}/apache-cassandra-${cassandra.server.version}-src.tar.gz"/>
+        <pathelement path="${common.deps}/cassandra-sources/CHANGES.txt"/>
+      </input>
+
+      <actions>
+        <delete dir="${common.deps}/cassandra-sources"/>
+        <untar compression="gzip" src="${common.deps.download.dir}/apache-cassandra-${cassandra.server.version}-src.tar.gz" dest="${common.deps}"/>
+        <move file="${common.deps}/apache-cassandra-${cassandra.server.version}-src" tofile="${common.deps}/cassandra-sources"/>
+        <zip file="${common.deps}/cassandra-sources/src.zip" basedir="${common.deps}/cassandra-sources/src" />
       </actions>
     </execute_on_changed>
 
@@ -504,7 +555,7 @@
       </then>
     </if>
 
-    <!--Kotlin-->
+    <!-- Kotlin -->
     <download.and.pin
         artifact.build.number="${kotlin.version}"
         artifact.build.type="${kotlin.buildTypeId}"
@@ -515,12 +566,19 @@
         artifact.build.type="${kotlin.buildTypeId}"
         artifact.name="kotlin-for-upsource-sources.jar"
         file="${common.deps.download.dir}/kotlin-for-upsource-${kotlin.version}-sources.jar"/>
+    <download.and.pin
+        artifact.build.number="${kotlin.version}"
+        artifact.build.type="${kotlin.buildTypeId}"
+        artifact.name="kotlin-compiler-${kotlin.version}.zip"
+        file="${common.deps.download.dir}/kotlin-compiler-${kotlin.version}.zip"/>
     <execute_on_changed id="kotlin-for-upsource">
       <input>
         <pathelement path="${common.deps.download.dir}/kotlin-for-upsource-${kotlin.version}.jar"/>
         <pathelement path="${common.deps.download.dir}/kotlin-for-upsource-${kotlin.version}-sources.jar"/>
+        <pathelement path="${common.deps.download.dir}/kotlin-compiler-${kotlin.version}.zip"/>
         <pathelement path="${kotlin.api.root}/kotlin-for-upsource.jar"/>
         <pathelement path="${kotlin.api.root}/kotlin-for-upsource-sources.jar"/>
+        <pathelement path="${kotlin.api.root}/kotlinc/lib/kotlin-runtime.jar"/>
       </input>
 
       <actions>
@@ -530,9 +588,23 @@
               tofile="${kotlin.api.root}/kotlin-for-upsource.jar" />
         <copy file="${common.deps.download.dir}/kotlin-for-upsource-${kotlin.version}-sources.jar"
               tofile="${kotlin.api.root}/kotlin-for-upsource-sources.jar" />
+        <unzip src="${common.deps.download.dir}/kotlin-compiler-${kotlin.version}.zip"
+               dest="${kotlin.api.root}" />
       </actions>
     </execute_on_changed>
 
+    <!-- ProGuard -->
+    <download_dependency id="proguard">
+      <dependencies filesetid="proguard.fileset" sourcesFilesetId="proguard.sources.fileset"
+                    settingsfile="${basedir}/out/maven-settings.xml">
+        <dependency groupId="net.sf.proguard" artifactId="proguard-anttask" version="5.1"/>
+      </dependencies>
+    </download_dependency>
+
+    <path id="proguard.path">
+      <fileset dir="${basedir}/lib/proguard" includes="*.jar"/>
+    </path>
+    <taskdef resource="proguard/ant/task.properties" classpathref="proguard.path"/>
   </target>
 
   <target name="fetch.hypertable">
@@ -649,6 +721,11 @@
     <fetch.idea.for.plugin.macro id="14" buildTypeId="${idea.for.plugin.14.buildTypeId}" version="${idea.for.plugin.14.version}" />
   </target>
 
+  <target name="download-idea-builds-for-plugin">
+    <antcall target="download-idea-for-plugin-14"/>
+    <antcall target="download-idea-for-plugin-trunk"/>
+  </target>
+
   <target name="build-idea-plugins">
     <echo>Building all plugins for IDEA from scratch</echo>
     <delete dir="${basedir}/out/idea-plugins"/>
@@ -658,24 +735,18 @@
   </target>
 
   <target name="validate-libraries-for-idea-plugin">
-    <ant antfile="${basedir}/frontend/frontend-idea/buildIdeaPlugin.xml"
-         target="validateLibraries" usenativebasedir="true">
-      <property name="project.dir" value="${basedir}"/>
-    </ant>
+    <ant antfile="${basedir}/validateIdeaPlugin.xml"
+         target="validateLibraries" usenativebasedir="true"/>
   </target>
 
   <target name="build-idea-plugin-14-debug" depends="download-idea-for-plugin-14">
-    <ant antfile="${basedir}/frontend/frontend-idea/buildIdeaPlugin.xml"
-         target="build14_debug" usenativebasedir="true">
-      <property name="project.dir" value="${basedir}"/>
-    </ant>
+    <ant antfile="${basedir}/buildIdeaPlugin.xml"
+         target="build14_debug" usenativebasedir="true"/>
   </target>
 
   <target name="build-idea-plugin-14" depends="download-idea-for-plugin-14">
-    <ant antfile="${basedir}/frontend/frontend-idea/buildIdeaPlugin.xml"
-         target="build14" usenativebasedir="true">
-      <property name="project.dir" value="${basedir}"/>
-    </ant>
+    <ant antfile="${basedir}/buildIdeaPlugin.xml"
+         target="build14" usenativebasedir="true"/>
   </target>
 
   <target name="download-idea-for-plugin-trunk">
@@ -683,10 +754,8 @@
   </target>
 
   <target name="build-idea-plugin-trunk" depends="download-idea-for-plugin-trunk">
-    <ant antfile="${basedir}/frontend/frontend-idea/buildIdeaPlugin.xml"
-         target="buildTrunk" usenativebasedir="true">
-      <property name="project.dir" value="${basedir}"/>
-    </ant>
+    <ant antfile="${basedir}/buildIdeaPlugin.xml"
+         target="buildTrunk" usenativebasedir="true"/>
   </target>
 
   <target name="make.sass">
@@ -935,6 +1004,12 @@
       </input>
 
       <actions>
+        <path id="tools.classpath">
+          <fileset dir="${basedir}/out/artifacts/upsource_lib">
+            <include name="*.jar"/>
+          </fileset>
+        </path>
+
         <java
             fork="true"
             classpathref="tools.classpath"
@@ -949,7 +1024,7 @@
           <arg value="${basedir}/out/production/backend/db-version"/>
         </java>
         <jar
-            destfile="${deploy.dir}/upsource.jar"
+            destfile="${basedir}/out/artifacts/upsource_lib/upsource.jar"
             basedir="${basedir}/backend/resources"
             includes="db-version"
             update="true"
@@ -959,7 +1034,7 @@
   </target>
 
   <target name="prepare"
-          depends="write-build-number,patch-frontend,fetch.dependencies,generate-model,populate-idea-utils,make.sass,make.js,make.html,write.source.root.path">
+          depends="write-build-number,patch-frontend,fetch.dependencies,fetch.installer.dependencies,make.gwt.sourcemaps.lib,generate-model,populate-idea-utils,make.sass,make.js,make.html,write.source.root.path">
     <!-- Make tmp dir for various run configurations in IDEA -->
     <mkdir dir="${basedir}/tmp/java"/>
 
@@ -967,7 +1042,7 @@
     <echo message="Encoding settings: file.encoding=${file.encoding} sun.io.unicode.encoding=${sun.io.unicode.encoding}" />
   </target>
 
-  <target name="after.compilation" depends="db-version.update" />
+  <target name="after.compilation" />
 
   <target name="fetch.installer.dependencies" depends="fetch.launcher">
     <download.and.pin
@@ -987,24 +1062,22 @@
       </actions>
     </execute_on_changed>
 
-    <download.and.pin
-        artifact.build.number="${dep.bundle.version}"
-        artifact.build.type="${dep.bundle.buildTypeId}"
-        artifact.name="hub-${dep.bundle.version}.zip"
-        file="${common.deps.download.dir}/hub-${dep.bundle.version}.zip"/>
-    <execute_on_changed id="hub">
-      <input>
-        <pathelement path="${common.deps.download.dir}/hub-${dep.bundle.version}.zip"/>
-        <pathelement path="${basedir}/out/hub/service.properties"/>
-      </input>
-
-      <actions>
-        <delete dir="${dep.bundle.hub.root}"/>
-        <unzip src="${common.deps.download.dir}/hub-${dep.bundle.version}.zip" dest="${basedir}/out"/>
+    <fetch-artifact
+        artifact.build.number="${hub.server.version}"
+        artifact.build.type="${hub.service.buildTypeId}"
+        artifact.name="hub-service-${hub.server.version}.zip"
+        artifact.state.id="hub-service"
+        >
+      <additional-paths>
+        <pathelement path="${hub.service.root}/service.properties"/>
+      </additional-paths>
+      <prepare-artifact>
+        <delete dir="${hub.service.root}"/>
+        <unzip src="${artifact.local.path}" dest="${hub.service.root}"/>
 
         <!-- TODO Remove after proper implementation of BND-296 -->
         <perform.action.in.zip.file.entry
-            zip.file="${basedir}/out/hub/web/WEB-INF/lib/jetpass-core.jar"
+            zip.file="${hub.service.root}/web/WEB-INF/lib/jetpass-core.jar"
             zip.file.entry="jetbrains/jetpass/service/bean/jetPassServiceFactoryBeanConfiguration.xml">
           <actions>
             <replace file="@{tmp.folder}/@{zip.file.entry}" token="YouTrack Free Pack User"
@@ -1014,6 +1087,64 @@
                      value="7c2a735bf5464f55aa20f2b45202961c689506c6db9e5bb61204cdfcd6ef3663d736764e49fa90308baaf8723205c04a64d7fafb27cca2571a7e204004ee78c7fca39e3150c67ba7bf36f2a8949cef72dac60fa1e0be42e0716680d418cad924d4076079d53327f0a1bd1bbe56e5b00637eb519c31e3f3026d3e58642069e658"/>
           </actions>
         </perform.action.in.zip.file.entry>
+      </prepare-artifact>
+    </fetch-artifact>
+  </target>
+
+  <target name="make.gwt.sourcemaps.lib" depends="fetch.dependencies">
+    <!--
+    gwt-sourcemaps is a library extracted from gwt-*.jar for translating obfuscated strack traces from frontend
+    to server's logs in readable manner.
+
+    See com.jetbrains.upsource.frontend.server.handlers.LogHandler for actual usage
+    -->
+
+    <execute_on_changed id="gwt-sourcemaps">
+      <input>
+        <pathelement path="${basedir}/lib/gwt/gwt-user.jar"/>
+        <pathelement path="${basedir}/lib/gwt/gwt-servlet.jar"/>
+        <pathelement path="${basedir}/lib/gwt-sourcemaps/gwt-sourcemaps.jar"/>
+        <pathelement path="${basedir}/lib/gwt-sourcemaps/gwt-sourcemaps-sources.jar"/>
+      </input>
+
+      <actions>
+        <delete dir="${basedir}/lib/gwt-sourcemaps" />
+        <mkdir dir="${basedir}/lib/gwt-sourcemaps" />
+
+        <jar destfile="${basedir}/lib/gwt-sourcemaps/gwt-sourcemaps-full.jar">
+          <zipfileset includes="com/google/gwt/thirdparty/debugging/sourcemap/**/*.class" src="${basedir}/lib/gwt/gwt-servlet.jar"/>
+          <zipfileset includes="com/google/gwt/dev/protobuf/**/*.class" src="${basedir}/lib/gwt/gwt-servlet.jar"/>
+          <zipfileset includes="com/google/gwt/thirdparty/guava/**/*.class"
+                      excludes="com/google/gwt/thirdparty/guava/common/net/**/*.class"
+                      src="${basedir}/lib/gwt/gwt-servlet.jar"/>
+          <zipfileset includes="com/google/gwt/thirdparty/json/**/*.class" src="${basedir}/lib/gwt/gwt-servlet.jar"/>
+
+          <zipfileset includes="com/google/gwt/core/server/StackTraceDeobfuscator*.class" src="${basedir}/lib/gwt/gwt-user.jar"/>
+        </jar>
+
+        <jar destfile="${basedir}/lib/gwt-sourcemaps/gwt-sourcemaps-sources.jar">
+          <zipfileset includes="com/google/gwt/core/server/StackTraceDeobfuscator*.java" src="${basedir}/lib/gwt/gwt-user.jar"/>
+        </jar>
+
+        <!-- Verify we've got all dependencies of StackTraceDeobfuscator -->
+        <available property="rtjar" value="${java.home}/lib/rt.jar" file="${java.home}/lib/rt.jar"/>
+        <available property="rtjar" value="${java.home}/../Classes/classes.jar" file="${java.home}/../Classes/classes.jar"/>
+        <proguard><![CDATA[
+          -injars '${basedir}/lib/gwt-sourcemaps/gwt-sourcemaps-full.jar'
+          -outjars '${basedir}/lib/gwt-sourcemaps/gwt-sourcemaps.jar'
+
+          -libraryjars '${rtjar}'
+          -libraryjars '${basedir}/lib/jsr305/jsr305-1.3.9.jar'
+
+          -dontnote **
+
+          -target 1.6
+          -dontoptimize
+          -dontobfuscate
+
+          -keep class com.google.gwt.core.server.StackTraceDeobfuscator { *; }
+        ]]></proguard>
+        <delete file="${basedir}/lib/gwt-sourcemaps/gwt-sourcemaps-full.jar" />
       </actions>
     </execute_on_changed>
   </target>
@@ -1053,7 +1184,33 @@
     <echo message="upsource.version.build: ${upsource.version.build}"/>
   </target>
 
+  <macrodef name="substitute.version.in.descriptor">
+    <attribute name="version.token" default="@version@"/>
+    <attribute name="version.value" default="${build.number}"/>
+    <sequential>
+      <replaceregexp
+          file="${artifact.output.path}/service.properties"
+          encoding="UTF-8"
+          match="@{version.token}"
+          replace="@{version.value}"
+          byline="true"/>
+    </sequential>
+  </macrodef>
+
+  <target name="patch.analyzer.service.artifact">
+    <substitute.version.in.descriptor/>
+  </target>
+
+  <target name="patch.monitoring.service.artifact">
+    <substitute.version.in.descriptor/>
+  </target>
+
+  <target name="patch.frontend.service.artifact">
+    <substitute.version.in.descriptor/>
+  </target>
+
   <target name="patch.cassandra.service.artifact">
+    <substitute.version.in.descriptor/>
     <!-- Patch jamm location -->
     <mkdir dir="${artifact.output.path}/lib/jamm" />
     <move todir="${artifact.output.path}/lib/jamm">
@@ -1073,7 +1230,8 @@
               srcFile="${basedir}/deployment/bundle/cqlsh-read-default-port-from-bundle-config.txt"
               encoding="UTF-8"/>
     <copy file="${common.deps}/cassandra/bin/cqlsh"
-          tofile="${artifact.output.path}/bin/cqlsh" />
+          tofile="${artifact.output.path}/bin/cqlsh"
+          overwrite="true" />
     <replaceregexp
         file="${artifact.output.path}/bin/cqlsh"
         encoding="UTF-8"
@@ -1098,6 +1256,24 @@
 
   <target name="generate.cassandra.service.launcher" depends="fetch.launcher">
     <delete dir="${artifact.output.path}" />
+
+    <pathconvert property="jamm.location" pathsep=" ">
+      <path>
+        <fileset dir="${common.deps}/cassandra/lib" includes="jamm-*.jar" />
+      </path>
+    </pathconvert>
+
+    <fail message="Unable to locate jamm for cassandra">
+      <condition>
+        <not>
+          <available file="${jamm.location}"/>
+        </not>
+      </condition>
+    </fail>
+
+    <basename property="jamm.file.name" file="${jamm.location}" />
+    <echo message="Using ${jamm.file.name} for cassandra" />
+
     <prepare-launcher-dist targetDir="${artifact.output.path}">
       <options>
         <appdisplayname>Apache Cassandra</appdisplayname>
@@ -1107,15 +1283,15 @@
         <starttimeoutseconds>3600</starttimeoutseconds>
       </options>
       <findjava>
-        <minversion>1.7</minversion>
+        <minversion>1.8</minversion>
       </findjava>
       <javaconfig>
         <appwrapper>
           <class>com.jetbrains.cassandra.service.CassandraServiceMain</class>
         </appwrapper>
         <defaultappjvmoptions>
-          <option>-Xbootclasspath/a:lib/jamm/jamm-0.2.6.jar</option>
-          <option>-javaagent:lib/jamm/jamm-0.2.6.jar</option>
+          <option>-Xbootclasspath/a:lib/jamm/${jamm.file.name}</option>
+          <option>-javaagent:lib/jamm/${jamm.file.name}</option>
           <option>-d64</option>
           <option>-Xmx3000m</option>
           <option>-XX:MaxPermSize=128m</option>
@@ -1123,18 +1299,142 @@
         </defaultappjvmoptions>
       </javaconfig>
     </prepare-launcher-dist>
+
+    <set.launcher.conf.provider.for.service
+        service.home="${artifact.output.path}"
+        bundle.buildTypeId="${dep.bundle.buildTypeId}"
+        bundle.version="${dep.bundle.version}"
+        />
   </target>
 
-  <target name="make.installer" depends="fetch.installer.dependencies,parse.build.number">
-    <delete dir="${bundle.home}"/>
+  <target name="generate.analyzer.service.launcher" depends="fetch.launcher">
+    <delete dir="${artifact.output.path}" />
 
-    <copy todir="${bundle.home}">
+    <prepare-launcher-dist targetDir="${artifact.output.path}">
+      <options>
+        <appdisplayname>Upsource Analyzer</appdisplayname>
+        <appdescription>Source Code Indexer</appdescription>
+        <winservicename>upsource-analyzer</winservicename>
+        <launcherscriptname>upsource-analyzer</launcherscriptname>
+        <applibdir>../../lib/upsource</applibdir>
+        <starttimeoutseconds>3600</starttimeoutseconds>
+      </options>
+      <findjava>
+        <minversion>1.8</minversion>
+        <additionaldirs>
+          <dir>../../internal/java/windows-amd64</dir>
+        </additionaldirs>
+      </findjava>
+      <javaconfig>
+        <appwrapper>
+          <class>com.jetbrains.upsource.backend.cli.UpsourceAnalyzerDaemon</class>
+        </appwrapper>
+        <defaultappjvmoptions>
+          <option>-Dupsource.properties.file=../upsource.user.properties,upsource.properties</option>
+          <option>-Xmx2000m</option>
+          <option>-XX:MaxPermSize=512m</option>
+          <option>-XX:MaxMetaspaceSize=512m</option>
+        </defaultappjvmoptions>
+      </javaconfig>
+    </prepare-launcher-dist>
+
+    <set.launcher.conf.provider.for.service
+        service.home="${artifact.output.path}"
+        bundle.buildTypeId="${dep.bundle.buildTypeId}"
+        bundle.version="${dep.bundle.version}"
+        />
+  </target>
+
+  <target name="generate.frontend.service.launcher" depends="fetch.launcher">
+    <delete dir="${artifact.output.path}" />
+
+    <prepare-launcher-dist targetDir="${artifact.output.path}">
+      <options>
+        <appdisplayname>Upsource Frontend</appdisplayname>
+        <appdescription>Upsource Web Application</appdescription>
+        <winservicename>upsource-frontend</winservicename>
+        <launcherscriptname>upsource-frontend</launcherscriptname>
+        <applibdir>../../lib/upsource</applibdir>
+        <starttimeoutseconds>3600</starttimeoutseconds>
+      </options>
+      <findjava>
+        <minversion>1.8</minversion>
+        <additionaldirs>
+          <dir>../../internal/java/windows-amd64</dir>
+        </additionaldirs>
+      </findjava>
+      <javaconfig>
+        <appwrapper>
+          <class>com.jetbrains.upsource.frontend.server.UpsourceFrontendDaemon</class>
+        </appwrapper>
+        <defaultappjvmoptions>
+          <option>-Dupsource.properties.file=../upsource.user.properties,upsource.properties</option>
+          <option>-Xmx1000m</option>
+          <option>-XX:MaxPermSize=512m</option>
+          <option>-XX:MaxMetaspaceSize=512m</option>
+        </defaultappjvmoptions>
+      </javaconfig>
+    </prepare-launcher-dist>
+
+    <set.launcher.conf.provider.for.service
+        service.home="${artifact.output.path}"
+        bundle.buildTypeId="${dep.bundle.buildTypeId}"
+        bundle.version="${dep.bundle.version}"
+        />
+  </target>
+
+  <target name="generate.monitoring.service.launcher" depends="fetch.launcher">
+    <delete dir="${artifact.output.path}" />
+
+    <prepare-launcher-dist targetDir="${artifact.output.path}">
+      <options>
+        <appdisplayname>Upsource Monitoring</appdisplayname>
+        <appdescription>Upsource Monitoring Application</appdescription>
+        <winservicename>upsource-monitoring</winservicename>
+        <launcherscriptname>upsource-monitoring</launcherscriptname>
+        <applibdir>../../lib/upsource</applibdir>
+        <starttimeoutseconds>3600</starttimeoutseconds>
+      </options>
+      <findjava>
+        <minversion>1.8</minversion>
+        <additionaldirs>
+          <dir>../../internal/java/windows-amd64</dir>
+        </additionaldirs>
+      </findjava>
+      <javaconfig>
+        <appwrapper>
+          <class>com.jetbrains.upsource.frontend.monitoring.MonitoringDaemon</class>
+        </appwrapper>
+        <defaultappjvmoptions>
+          <option>-Dupsource.properties.file=../upsource.user.properties,upsource.properties</option>
+          <option>-Xmx256m</option>
+          <option>-XX:MaxPermSize=512m</option>
+          <option>-XX:MaxMetaspaceSize=512m</option>
+        </defaultappjvmoptions>
+      </javaconfig>
+    </prepare-launcher-dist>
+
+    <set.launcher.conf.provider.for.service
+        service.home="${artifact.output.path}"
+        bundle.buildTypeId="${dep.bundle.buildTypeId}"
+        bundle.version="${dep.bundle.version}"
+        />
+  </target>
+
+  <target name="clean.artifact.output.path">
+    <delete dir="${artifact.output.path}" />
+  </target>
+
+  <target name="generate.bundle.skel" depends="fetch.dependencies,parse.build.number">
+    <delete dir="${artifact.output.path}" />
+
+    <copy todir="${artifact.output.path}">
       <fileset dir="${dep.bundle.platform.root}"/>
     </copy>
 
-    <mkdir dir="${bundle.home}/internal/conf"/>
-    <touch file="${bundle.home}/internal/conf/bundle_build.properties"/>
-    <propertyfile file="${bundle.home}/internal/conf/bundle_build.properties">
+    <mkdir dir="${artifact.output.path}/internal/conf"/>
+    <touch file="${artifact.output.path}/internal/conf/bundle_build.properties"/>
+    <propertyfile file="${artifact.output.path}/internal/conf/bundle_build.properties">
       <entry  key="service.hub.bundledin" value="bundleProcess"/>
       <entry  key="service.vcs-settings.bundledin" value="vcsSettingsContainer"/>
 
@@ -1147,323 +1447,90 @@
       <entry  key="bundle.product.name" value="Upsource"/>
       <entry  key="bundle.product.version" value="${upsource.version.minor.major}"/>
       <entry  key="bundle.product.build" value="${upsource.version.build}"/>
-      <entry  key="bundle.product.manufacturer" value="JetBrains"/>
       <!--<entry  key="bundle.product.presentation_name" value="Non-default product name might be set in this property"/>-->
     </propertyfile>
 
-    <loadproperties srcfile="${bundle.home}/internal/conf/bundle_build.properties"/>
+    <loadproperties srcfile="${artifact.output.path}/internal/conf/bundle_build.properties"/>
 
     <!-- Xmx is increased (comparing to default 256m) in view of starting vcs-settings in Bundle process -->
     <instrument.bundle
-        bundle.home="${bundle.home}"
+        bundle.home="${artifact.output.path}"
         launcher.dir="${dep.launcher.root}"
         launcher.script.name="upsource"
         display.name="${bundle.product.name}"
         description="${bundle.product.name} Service"
         win.service.name="upsource"
+        min.java.version.required="1.8"
         starttimeoutseconds="18000"
         stoptimeoutseconds="1800"
         Xmx="384m"/>
+  </target>
 
-    <property name="services" value="${bundle.home}/apps"/>
+  <target name="post.upsource.services.task">
+    <fix.file.mode dir="${artifact.output.path}" />
+  </target>
 
-    <!-- Upsource code -->
-    <mkdir dir="${bundle.home}/lib/upsource/plugins" />
+  <target name="post.bundle.task">
+    <fixcrlf file="${artifact.output.path}/README.txt" eol="crlf" encoding="UTF-8" />
 
-    <copy todir="${bundle.home}/lib/upsource">
-      <fileset dir="${deploy.dir}/lib"/>
-      <fileset file="${deploy.dir}/upsource.jar"/>
-    </copy>
+    <echo message="${upsource.build.number}" file="${artifact.output.path}/VERSION.txt" />
+    <fixcrlf file="${artifact.output.path}/VERSION.txt" eol="crlf" encoding="UTF-8" />
 
-    <copy todir="${bundle.home}/lib/upsource/plugins">
-      <fileset dir="${deploy.dir}/plugins"/>
-    </copy>
+    <add.jre bundleHome="${artifact.output.path}" javaType="${java.type.win_amd64}" javaVersion="${java.version.1.8}" />
+    <add.jre bundleHome="${artifact.output.path}" javaType="${java.type.mac_x64}"  javaVersion="${java.version.1.8}" />
 
-    <mkdir dir="${bundle.home}/lib/upsource/tools" />
-    <copy todir="${bundle.home}/lib/upsource/tools">
-      <fileset dir="${deploy.dir}/tools"/>
-    </copy>
+    <bundle.post.build bundle.home.dir="${artifact.output.path}"/>
 
-    <mkdir dir="${bundle.home}/lib/upsource/www" />
-    <copy todir="${bundle.home}/lib/upsource/www">
-      <fileset dir="${deploy.dir}/www"/>
-    </copy>
-
-    <!-- vcs-settings -->
-    <copy todir="${services}/vcs-settings">
-      <fileset dir="${basedir}/out/vcs-settings" includes="**/*"/>
-    </copy>
-
-    <propertyfile comment="Updated with Upsource Bundle build" file="${services}/vcs-settings/service.properties">
-      <entry key="after" value="hub"/>
-      <entry key="before" operation="del"/>
-    </propertyfile>
-
-    <!-- Cassandra -->
-    <copy todir="${services}/cassandra">
-      <fileset dir="${basedir}/out/artifacts/cassandra-service-all" />
-    </copy>
-
-    <!-- Analyzer -->
-    <prepare-launcher-dist targetDir="${services}/upsource-analyzer">
-      <options>
-        <appdisplayname>Upsource Analyzer</appdisplayname>
-        <appdescription>Source Code Indexer</appdescription>
-        <winservicename>upsource-analyzer</winservicename>
-        <launcherscriptname>upsource-analyzer</launcherscriptname>
-        <applibdir>../../lib/upsource</applibdir>
-        <starttimeoutseconds>3600</starttimeoutseconds>
-      </options>
-      <findjava>
-        <minversion>1.7</minversion>
-        <additionaldirs>
-          <dir>../../internal/java/windows-amd64</dir>
-        </additionaldirs>
-      </findjava>
-      <javaconfig>
-        <appwrapper>
-          <class>com.jetbrains.upsource.backend.cli.UpsourceAnalyzerDaemon</class>
-        </appwrapper>
-        <defaultappjvmoptions>
-          <option>-Dupsource.properties.file=../../conf/upsource.user.properties,upsource.properties</option>
-          <option>-Xmx2000m</option>
-          <option>-XX:MaxPermSize=512m</option>
-          <option>-XX:MaxMetaspaceSize=512m</option>
-        </defaultappjvmoptions>
-      </javaconfig>
-    </prepare-launcher-dist>
-
-    <copy file="${basedir}/deployment/bundle/analyzer.service.properties"
-          tofile="${services}/upsource-analyzer/service.properties"/>
-
-    <copy file="${basedir}/deployment/bundle/log4j.xml"
-          todir="${services}/upsource-analyzer/conf"/>
-
-    <!-- Frontend -->
-    <prepare-launcher-dist targetDir="${services}/upsource-frontend">
-      <options>
-        <appdisplayname>Upsource Frontend</appdisplayname>
-        <appdescription>Upsource Web Application</appdescription>
-        <winservicename>upsource-frontend</winservicename>
-        <launcherscriptname>upsource-frontend</launcherscriptname>
-        <applibdir>../../lib/upsource</applibdir>
-        <starttimeoutseconds>3600</starttimeoutseconds>
-      </options>
-      <findjava>
-        <minversion>1.7</minversion>
-        <additionaldirs>
-          <dir>../../internal/java/windows-amd64</dir>
-        </additionaldirs>
-      </findjava>
-      <javaconfig>
-        <appwrapper>
-          <class>com.jetbrains.upsource.frontend.server.UpsourceFrontendDaemon</class>
-        </appwrapper>
-        <defaultappjvmoptions>
-          <option>-Dupsource.properties.file=../../conf/upsource.user.properties,upsource.properties</option>
-          <option>-Xmx1000m</option>
-          <option>-XX:MaxPermSize=512m</option>
-          <option>-XX:MaxMetaspaceSize=512m</option>
-        </defaultappjvmoptions>
-      </javaconfig>
-    </prepare-launcher-dist>
-
-    <copy file="${basedir}/deployment/bundle/frontend.service.properties"
-          tofile="${services}/upsource-frontend/service.properties"/>
-
-    <copy file="${basedir}/deployment/bundle/log4j.xml"
-          todir="${services}/upsource-frontend/conf"/>
-
-    <!-- Monitoring -->
-    <prepare-launcher-dist targetDir="${services}/upsource-monitoring">
-      <options>
-        <appdisplayname>Upsource Monitoring</appdisplayname>
-        <appdescription>Upsource Monitoring Application</appdescription>
-        <winservicename>upsource-monitoring</winservicename>
-        <launcherscriptname>upsource-monitoring</launcherscriptname>
-        <applibdir>../../lib/upsource</applibdir>
-        <starttimeoutseconds>3600</starttimeoutseconds>
-      </options>
-      <findjava>
-        <minversion>1.7</minversion>
-        <additionaldirs>
-          <dir>../../internal/java/windows-amd64</dir>
-        </additionaldirs>
-      </findjava>
-      <javaconfig>
-        <appwrapper>
-          <class>com.jetbrains.upsource.frontend.monitoring.MonitoringDaemon</class>
-        </appwrapper>
-        <defaultappjvmoptions>
-          <option>-Dupsource.properties.file=../../conf/upsource.user.properties,upsource.properties</option>
-          <option>-Xmx256m</option>
-          <option>-XX:MaxPermSize=512m</option>
-          <option>-XX:MaxMetaspaceSize=512m</option>
-        </defaultappjvmoptions>
-      </javaconfig>
-    </prepare-launcher-dist>
-
-    <copy file="${basedir}/deployment/bundle/monitoring.service.properties"
-          tofile="${services}/upsource-monitoring/service.properties"/>
-
-    <copy file="${basedir}/deployment/bundle/log4j.xml"
-          todir="${services}/upsource-monitoring/conf"/>
-
-    <!-- Hub -->
-    <copy todir="${services}/hub">
-      <fileset dir="${basedir}/out/hub" includes="**/*" />
-    </copy>
-
-    <!-- Bundle -->
-    <copy file="${basedir}/deployment/bundle/README.txt"
-          tofile="${bundle.home}/README.txt"/>
-    <fixcrlf file="${bundle.home}/README.txt" eol="crlf" encoding="UTF-8" />
-
-    <echo message="${upsource.build.number}" file="${bundle.home}/VERSION.txt" />
-    <fixcrlf file="${bundle.home}/VERSION.txt" eol="crlf" encoding="UTF-8" />
-
-    <copy todir="${bundle.home}/lib">
-      <fileset dir="${basedir}/deployment/bundle" includes="upsource-cli-tool.*" />
-      <fileset dir="${basedir}/deployment/bundle" includes="upsource-console.*" />
-      <fileset dir="${basedir}/deployment/bundle" includes="upsource-analyzer-cli.*" />
-    </copy>
-
-    <copy file="${basedir}/deployment/bundle/upsource.user.properties.dist"
-          todir="${bundle.home}/conf"/>
-
-    <antcall target="publish.bundle.services" />
-
-    <add.jre bundleHome="${bundle.home}" javaType="${java.type.win_amd64}" />
-    <add.jre bundleHome="${bundle.home}" javaType="${java.type.mac_x64}" />
-
-    <bundle.post.build bundle.home.dir="${bundle.home}"/>
-
-    <fix.line.endings />
+    <fix.line.endings dir="${artifact.output.path}" />
+    <fix.file.mode dir="${artifact.output.path}" />
   </target>
 
   <target name="publish.bundle.services">
     <property name="services.zip" value="${basedir}/out/upsource-bundle-services-${upsource.build.number}.zip" />
     <delete file="${services.zip}"/>
     <zip file="${services.zip}">
-      <zipfileset dir="${bundle.home}" prefix="Upsource" excludes="**/*.sh"/>
-      <zipfileset dir="${bundle.home}" prefix="Upsource" includes="**/*.sh" filemode="755"/>
+      <zipfileset dir="${basedir}/out/artifacts/upsource-services" prefix="Upsource" excludes="**/*.sh **/bin/mvn"/>
+      <zipfileset dir="${basedir}/out/artifacts/upsource-services" prefix="Upsource" includes="**/*.sh **/bin/mvn" filemode="755"/>
     </zip>
 
     <echo message="##teamcity[publishArtifacts '${services.zip}']"/>
   </target>
 
-  <!-- todo (AB) : Move to common build scripts -->
-  <macrodef name="perform.action.in.zip.file.entry">
-    <attribute name="zip.file"/>
-    <attribute name="zip.file.entry"/>
-    <attribute name="tmp.folder" default="${common.deps}/temp_action_in_zip"/>
-    <attribute name="fail.on.error" default="true"/>
-    <element name="actions"/>
-    <sequential>
-      <if>
-        <available file="@{zip.file}"/>
-        <then>
-          <mkdir dir="@{tmp.folder}"/>
-          <unzip src="@{zip.file}" dest="@{tmp.folder}">
-            <patternset>
-              <include name="@{zip.file.entry}"/>
-            </patternset>
-          </unzip>
-          <if>
-            <available file="@{tmp.folder}/@{zip.file.entry}"/>
-            <then>
-              <actions/>
-              <zip destfile="@{zip.file}.tmp">
-                <zipfileset src="@{zip.file}" excludes="@{zip.file.entry}"/>
-                <zipfileset file="@{tmp.folder}/@{zip.file.entry}" fullpath="@{zip.file.entry}"/>
-              </zip>
-              <move file="@{zip.file}.tmp" tofile="@{zip.file}" overwrite="true"/>
-            </then>
-            <else>
-              <if>
-                <equals arg1="@{fail.on.error}" arg2="true"/>
-                <then>
-                  <fail message="Can't preform action. File [@{tmp.folder}/@{zip.file.entry}] doesn't exist"/>
-                </then>
-              </if>
-            </else>
-          </if>
-          <delete dir="@{tmp.folder}"/>
-        </then>
-        <else>
-          <if>
-            <equals arg1="@{fail.on.error}" arg2="true"/>
-            <then>
-              <fail message="Can't preform action. Zip file [@{zip.file}] doesn't exist"/>
-            </then>
-          </if>
-        </else>
-      </if>
-    </sequential>
-  </macrodef>
-
-  <!-- todo (AB) : Move to common build scripts -->
-  <macrodef name="move.entry.in.zip.file">
-    <attribute name="zip.file"/>
-    <attribute name="zip.entry.old.path"/>
-    <attribute name="zip.entry.new.path"/>
-    <attribute name="tmp.folder" default="${common.deps}/temp_move_in_zip"/>
-    <attribute name="fail.on.error" default="true"/>
-    <sequential>
-      <if>
-        <available file="@{zip.file}"/>
-        <then>
-          <mkdir dir="@{tmp.folder}"/>
-
-          <zip file="@{tmp.folder}/tmp.zip">
-            <zipfileset src="@{zip.file}" includes="@{zip.entry.old.path}" fullpath="@{zip.entry.new.path}"/>
-            <zipfileset src="@{zip.file}" excludes="@{zip.entry.old.path}"/>
-          </zip>
-          <copy file="@{tmp.folder}/tmp.zip" tofile="@{zip.file}" overwrite="true"/>
-
-          <delete dir="@{tmp.folder}"/>
-        </then>
-        <else>
-          <if>
-            <equals arg1="@{fail.on.error}" arg2="true"/>
-            <then>
-              <fail message="Can't move zip entry. File [@{zip.file}] doesn't exist"/>
-            </then>
-          </if>
-        </else>
-      </if>
-    </sequential>
-  </macrodef>
-
   <macrodef name="fix.line.endings">
+    <attribute name="dir"/>
+
     <sequential>
-      <fixcrlf srcdir="${bundle.home}"
+      <fixcrlf srcdir="@{dir}"
                encoding="UTF-8"
                includes="**/*.yaml **/*.sh **/*.properties **/*.cfg **/*.xml **/*.pp **/*.ftl **/authorized_keys **/*.py"
                eol="lf" eof="remove" fixlast="true" preservelastmodified="true"/>
-      <fixcrlf srcdir="${bundle.home}"
+      <fixcrlf srcdir="@{dir}"
                encoding="UTF-8"
                includes="**/*.bat"
                eol="crlf" eof="remove" fixlast="true" preservelastmodified="true"/>
     </sequential>
   </macrodef>
 
+  <macrodef name="fix.file.mode">
+    <attribute name="dir"/>
+
+    <sequential>
+      <chmod perm="755">
+        <fileset dir="@{dir}" includes="**/*.sh **/*.py **/bin/mvn" />
+      </chmod>
+    </sequential>
+  </macrodef>
+
   <target name="make.installer.msi">
-    <!-- Todo (AB) : Icon for Upsource should be referenced - not copied. Perhaps, another place must be chosen for Bundle contract instead of '$(var.SourceDir)\..\files\-->
-    <!-- Todo (AB) : Feedback page for Upsource should be placed here-->
-    <!-- Todo (AB) : Resolve issue with Upsource build number. Now it is hardcoded to 0.0, but should be taken from ${upsource.build.number}-->
-    <copy file="${basedir}/frontend/bootstrap/web/favicon.ico"
-          todir="${basedir}/out/files"/>
+    <property name="msi.java.version" value="${java.version.1.8}"/>
 
-    <loadproperties srcfile="${bundle.home}/internal/conf/bundle_build.properties"/>
+    <loadproperties srcfile="${msi.build.dir}/internal/conf/bundle_build.properties"/>
 
-    <touch file="${bundle.home}/build_msi.properties"/>
-    <propertyfile file="${bundle.home}/build_msi.properties"
-                  comment="Base path for relative icon path 'bundle.wxs.product.icon.relative.path' is equal to '&lt;bundle_platform_home_folder&gt;\\..\files\
-                           ${line.separator}  bundle.wxs.product.name, bundle.wxs.product.version and bundle.wxs.product.build were moved to bundle_build.properties
-                           Usage of those properties mentioned above is not limited by MSI installation only, but is spread over all installations">
+    <delete file="${msi.build.dir}/build_msi.properties"/>
+    <touch file="${msi.build.dir}/build_msi.properties"/>
+    <propertyfile file="${msi.build.dir}/build_msi.properties">
       <entry  key="bundle.wxs.product.upgrade.code" value="E79A3B32-89C7-4820-81E8-8D41CD0DD058"/>
-      <entry  key="bundle.wxs.product.icon.relative.path" value="favicon.ico"/>
+      <entry  key="bundle.wxs.product.icon.file" value="${basedir}/frontend/bootstrap/web/favicon.ico"/>
       <entry  key="bundle.wxs.product.feedback.page"
               value="https://www.jetbrains.com/upsource/uninstall/upsource.jsp?version=${bundle.product.version}&amp;build=${bundle.product.version}.${bundle.product.build}"/>
       <entry  key="bundle.final.artifact.name" value="upsource-${upsource.build.number}"/>
@@ -1474,12 +1541,14 @@
     <echo message="Content: ${bundle.build.properties.text}" />
   </target>
 
-  <target name="publish.installer" depends="make.installer">
+  <target name="publish.installer">
     <property name="bundle.zip" value="${basedir}/out/upsource-${upsource.build.number}.zip" />
     <delete file="${bundle.zip}"/>
     <zip file="${bundle.zip}">
-      <zipfileset dir="${bundle.home}" prefix="Upsource" excludes="**/*.sh internal/java/mac*/bin/* internal/java/mac*/lib/jspawnhelper"/>
-      <zipfileset dir="${bundle.home}" prefix="Upsource" includes="**/*.sh internal/java/mac*/bin/* internal/java/mac*/lib/jspawnhelper" filemode="755"/>
+      <zipfileset dir="${basedir}/out/artifacts/bundle" prefix="Upsource"
+                  excludes="**/*.sh internal/java/mac*/bin/* internal/java/mac*/lib/jspawnhelper **/bin/mvn"/>
+      <zipfileset dir="${basedir}/out/artifacts/bundle" prefix="Upsource"
+                  includes="**/*.sh internal/java/mac*/bin/* internal/java/mac*/lib/jspawnhelper **/bin/mvn" filemode="755"/>
     </zip>
 
     <echo message="##teamcity[publishArtifacts '${bundle.zip}']"/>
@@ -1618,4 +1687,11 @@
     </sequential>
   </macrodef>
 
+  <target name="idea.plugin.post.process">
+    <property name="all.plugin.artifacts.dir" value="${basedir}/out/idea-plugins/all-artifacts"/>
+    <mkdir dir="${dist.dir}"/>
+    <copy todir="${dist.dir}">
+      <fileset dir="${all.plugin.artifacts.dir}"/>
+    </copy>
+  </target>
 </project>
