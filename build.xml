@@ -1316,7 +1316,7 @@
       </findjava>
       <javaconfig>
         <appwrapper>
-          <class>com.jetbrains.upsource.frontend.monitoring.MonitoringDaemon</class>
+          <class>com.jetbrains.upsource.frontend.monitoring.UpsourceMonitoringDaemon</class>
         </appwrapper>
         <defaultappjvmoptions>
           <option>-Dupsource.properties.file=../upsource.user.properties,upsource.properties</option>
@@ -1489,7 +1489,7 @@
     <build.all.packages.and.publish
         product.build.dir="${basedir}/out/package"
         product.output.dir="${basedir}/dist"
-        product.properties.file="${basedir}/package/package.properties"
+        product.properties.file="${basedir}/deployment/package/package.properties"
         product.zip.dir="${basedir}/deps" />
   </target>
 
