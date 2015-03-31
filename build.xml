@@ -215,8 +215,20 @@
       </actions>
     </execute_on_changed>
 
-    <call.npm args="install" dir="${dep.ring-ui-2.root}" />
-    <call.npm args="run build" dir="${dep.ring-ui-2.root}" />
+    <execute_on_changed id="npm-install">
+      <input>
+        <pathelement path="${nodejs.bin}"/>
+        <pathelement path="${npm.dir}/CHANGELOG.md"/>
+        <pathelement path="${dep.ring-ui-2.root}/package.json"/>
+        <pathelement path="${dep.ring-ui-2.root}/.npmrc"/>
+      </input>
+
+      <actions>
+        <call.npm args="install" dir="${dep.ring-ui-2.root}" />
+      </actions>
+    </execute_on_changed>
+
+    <call.node args="node_modules/webpack/bin/webpack.js" dir="${dep.ring-ui-2.root}" />
 
     <!-- hub client -->
     <download.and.pin
@@ -416,25 +428,6 @@
         <untar compression="gzip" src="${common.deps.download.dir}/apache-cassandra-${cassandra.server.version}-src.tar.gz" dest="${common.deps}"/>
         <move file="${common.deps}/apache-cassandra-${cassandra.server.version}-src" tofile="${common.deps}/cassandra-sources"/>
         <zip file="${common.deps}/cassandra-sources/src.zip" basedir="${common.deps}/cassandra-sources/src" />
-      </actions>
-    </execute_on_changed>
-
-    <!-- npm -->
-    <get
-        src="https://github.com/npm/npm/archive/v${npm.version}.zip"
-        dest="${common.deps.download.dir}/npm-${npm.version}.zip"
-        skipexisting="true"/>
-    <execute_on_changed id="npm-dist">
-      <input>
-        <pathelement path="${common.deps.download.dir}/npm-${npm.version}.zip"/>
-        <pathelement path="${common.deps}/cassandra/CHANGES.txt"/>
-      </input>
-
-      <actions>
-        <delete dir="${common.deps}/npm"/>
-
-        <unzip src="${common.deps.download.dir}/npm-${npm.version}.zip" dest="${common.deps}"/>
-        <move file="${common.deps}/npm-${npm.version}" tofile="${common.deps}/npm"/>
       </actions>
     </execute_on_changed>
 
