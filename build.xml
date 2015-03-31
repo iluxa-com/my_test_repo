@@ -248,14 +248,10 @@
         <delete dir="${dep.ring-ui-2.monitoring.root}"/>
 
         <mkdir dir="${dep.ring-ui-2.root}"/>
-        <untar src="${common.deps.download.dir}/ring-ui-component-${dep.ring-ui-2.version}.tar.gz" dest="${dep.ring-ui-2.root}" compression="gzip">
-          <patternset>
-            <include name="package/ring2.js" />
-          </patternset>
-        </untar>
+        <untar src="${common.deps.download.dir}/ring-ui-component-${dep.ring-ui-2.version}.tar.gz" dest="${dep.ring-ui-2.root}" compression="gzip" />
 
         <rename src="${dep.ring-ui-2.root}/package/ring2.js" dest="${dep.ring-ui-2.root}/ring.min.js" />
-        <delete dir="${dep.ring-ui-2.root}/package" />
+        <!--delete dir="${dep.ring-ui-2.root}/package" /-->
 
         <mkdir dir="${dep.ring-ui-2.monitoring.root}"/>
         <copy todir="${dep.ring-ui-2.monitoring.root}">
