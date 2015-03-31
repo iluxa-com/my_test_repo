@@ -1,3 +1,4 @@
+
 <project name="Upsource" basedir=".">
 
   <dirname property="upsource.build.xml.dir" file="${ant.file.Upsource}"/>
