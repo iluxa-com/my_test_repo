@@ -552,12 +552,12 @@
         <if>
           <os family="mac"/>
           <then>
-            <propery name="nodejs.arch" value="darwin-x64"/>
+            <property name="nodejs.arch" value="darwin-x64"/>
           </then>
 
           <else>
             <!-- Let it be Linux -->
-            <propery name="nodejs.arch" value="linux-x64"/>
+            <property name="nodejs.arch" value="linux-x64"/>
           </else>
         </if>
 
