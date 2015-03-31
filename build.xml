@@ -1437,6 +1437,7 @@
     <propertyfile file="${artifact.output.path}/internal/conf/bundle_build.properties">
       <entry  key="service.hub.bundledin" value="bundleProcess"/>
       <entry  key="service.vcs-settings.bundledin" value="vcsSettingsContainer"/>
+      <entry  key="service.vcs-settings.hub-assert-enabled" value="true"/>
 
       <entry  key="service.hub.jetbrains.jetpass.jabber.settings.hide" value="true"/>
       <entry  key="service.hub.jetbrains.jetpass.services.hide" value="true"/>
