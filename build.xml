@@ -237,26 +237,47 @@
     <!-- Ring GAP lib (new lib for query-assist)-->
     <!-- note: put to lib/ring-query-assist/-->
     <get
-        src="http://central.maven.org/maven2/org/antlr/antlr4-runtime/4.3/antlr4-runtime-4.3.jar"
-        dest="${common.deps.download.dir}/antlr4-runtime.jar"
+        src="http://maven.labs.intellij.net/central-proxy/org/antlr/${ring.query-assist.antlr.runtime.file.path}"
+        dest="${common.deps.download.dir}/antlr-runtime-${ring.query-assist.antlr.runtime.version}.jar"
         skipexisting="true"/>
+
     <download.and.pin
         artifact.build.number="${ring.query-assist.version}"
         artifact.build.type="${ring.query-assist.buildTypeId}"
         artifact.name="gap-rest-${ring.query-assist.version}.jar"
         file="${common.deps.download.dir}/gap-rest-${ring.query-assist.version}.jar"/>
+
+    <download.and.pin
+        artifact.build.number="${ring.query-assist.kotlin.version}"
+        artifact.build.type="${ring.query-assist.kotlin.buildTypeId}"
+        artifact.name="kotlin-compiler-${ring.query-assist.kotlin.version}.zip"
+        file="${common.deps.download.dir}/kotlin-compiler-${ring.query-assist.kotlin.version}.zip"/>
+
     <execute_on_changed id="ring-query-assist">
       <input>
         <pathelement path="${common.deps.download.dir}/gap-rest-${ring.query-assist.version}.jar"/>
         <pathelement path="${basedir}/lib/ring-query-assist/ring.gap.jar"/>
+
+        <pathelement path="${common.deps.download.dir}/antlr-runtime-${ring.query-assist.antlr.runtime.version}.jar"/>
+        <pathelement path="${basedir}/lib/ring-query-assist/antlr-runtime.jar"/>
+
+        <pathelement path="kotlin-compiler-${ring.query-assist.kotlin.version}.zip"/>
+        <pathelement path="${basedir}/lib/ring-query-assist/kotlin-runtime.jar"/>
       </input>
 
       <actions>
         <delete dir="${basedir}/lib/ring-query-assist"/>
         <mkdir dir="${basedir}/lib/ring-query-assist"/>
+
+        <unzip src="${common.deps.download.dir}/kotlin-compiler-${ring.query-assist.kotlin.version}.zip"
+               dest="${common.deps.download.dir}/kotlin/${ring.query-assist.kotlin.version}" />
+        <copy file="${common.deps.download.dir}/kotlin/${ring.query-assist.kotlin.version}/kotlinc/lib/kotlin-runtime.jar" todir="${basedir}/lib/ring-query-assist"/>
+
         <copy file="${common.deps.download.dir}/gap-rest-${ring.query-assist.version}.jar" todir="${basedir}/lib/ring-query-assist"/>
-        <copy file="${common.deps.download.dir}/antlr4-runtime.jar" todir="${basedir}/lib/ring-query-assist"/>
         <rename src="${basedir}/lib/ring-query-assist/gap-rest-${ring.query-assist.version}.jar" dest="${basedir}/lib/ring-query-assist/ring.gap.jar"/>
+
+        <copy file="${common.deps.download.dir}/antlr-runtime-${ring.query-assist.antlr.runtime.version}.jar" todir="${basedir}/lib/ring-query-assist"/>
+        <rename src="${basedir}/lib/ring-query-assist/antlr-runtime-${ring.query-assist.antlr.runtime.version}.jar" dest="${basedir}/lib/ring-query-assist/antlr-runtime.jar"/>
       </actions>
     </execute_on_changed>
 
@@ -301,7 +322,7 @@
                     settingsfile="${basedir}/out/maven-settings.xml">
         <remoteRepository id="internal-thirdparty" url="http://maven.labs.intellij.net/thirdparty" />
 
-        <dependency groupId="com.datastax.cassandra" artifactId="cassandra-driver-core" version="2.1.4">
+        <dependency groupId="com.datastax.cassandra" artifactId="cassandra-driver-core" version="2.1.5">
           <exclusion groupId="org.slf4j" artifactId="slf4j-api"/>
           <exclusion groupId="org.slf4j" artifactId="slf4j-log4j12"/>
           <exclusion groupId="commons-logging" artifactId="commons-logging"/>
@@ -674,6 +695,7 @@
 
           <unzip src="${common.deps.download.dir}/plugin-ideaIC-@{version}.win.zip" dest="${dir}/idea"/>
           <copy file="${common.deps.download.dir}/plugin-idea-sources-@{version}.zip" tofile="${dir}/sources.zip"/>
+          <delete file="${dir}/idea/bin/log.xml"/>
           <copy file="${basedir}/idea_for_plugin_log.xml" tofile="${dir}/idea/bin/log.xml"/>
         </actions>
       </execute_on_changed>
@@ -709,10 +731,13 @@
       <isset property="production"/>
     </condition>
 
-    <ant antfile="${basedir}/frontend/frontend-api/model/generateModel.xml"
-         target="generate" usenativebasedir="true">
+    <ant antfile="${basedir}/frontend/frontend-api/model/generateModel.xml" target="generate" usenativebasedir="true">
       <property name="project.dir" value="${basedir}"/>
       <property name="gwt.compilation.mode" value="${gwtmode}"/>
+    </ant>
+
+    <ant antfile="${basedir}/frontend/frontend-monitoring/model/generateModel.xml" target="generate" usenativebasedir="true">
+      <property name="project.dir" value="${basedir}"/>
     </ant>
   </target>
 
@@ -1431,6 +1456,9 @@
       <entry  key="bundle.product.version" value="${upsource.version.major.minor}"/>
       <entry  key="bundle.product.build" value="${upsource.version.build}"/>
       <!--<entry  key="bundle.product.presentation_name" value="Non-default product name might be set in this property"/>-->
+
+      <!-- todo (AB): Uncomment that as soon as External Hub integration is fully implemented by Bundle (https://youtrack.jetbrains.com/issue/BND-376)-->
+      <entry  key="bundle.wizard.external_hub_permitted" value="false"/>
     </propertyfile>
 
     <loadproperties srcfile="${artifact.output.path}/internal/conf/bundle_build.properties"/>
@@ -1450,6 +1478,11 @@
   </target>
 
   <target name="post.upsource.services.task">
+    <!-- Skip showing Hub license agreement in Upsource product. Upsource agreement is enough -->
+    <propertyfile file="${artifact.output.path}/apps/hub/service.properties">
+      <entry operation="del" key="license.agreement.path"/>
+    </propertyfile>
+
     <fix.file.mode dir="${artifact.output.path}" />
   </target>
 
