@@ -237,22 +237,29 @@
       </actions>
     </execute_on_changed>
 
-    <!-- hub query parser -->
+    <!-- Ring GAP lib (new lib for query-assist)-->
+    <!-- note: put to lib/ring-query-assist/-->
+    <get
+        src="http://central.maven.org/maven2/org/antlr/antlr4-runtime/4.3/antlr4-runtime-4.3.jar"
+        dest="${common.deps.download.dir}/antlr4-runtime.jar"
+        skipexisting="true"/>
     <download.and.pin
-        artifact.build.number="${hub.query-parser.version}"
-        artifact.build.type="${hub.query-parser.buildTypeId}"
-        artifact.name="hub-parser.zip"
-        file="${common.deps.download.dir}/hub-query-parser-${hub.query-parser.version}.zip"/>
-    <execute_on_changed id="hub-query-parser">
+        artifact.build.number="${ring.query-assist.version}"
+        artifact.build.type="${ring.query-assist.buildTypeId}"
+        artifact.name="gap-rest-${ring.query-assist.version}.jar"
+        file="${common.deps.download.dir}/gap-rest-${ring.query-assist.version}.jar"/>
+    <execute_on_changed id="ring-query-assist">
       <input>
-        <pathelement path="${common.deps.download.dir}/hub-query-parser-${hub.query-parser.version}.zip"/>
-        <pathelement path="${basedir}/lib/hub-query-parser/jetbrains.jetpass.dao.query.jar"/>
+        <pathelement path="${common.deps.download.dir}/gap-rest-${ring.query-assist.version}.jar"/>
+        <pathelement path="${basedir}/lib/ring-query-assist/ring.gap.jar"/>
       </input>
 
       <actions>
-        <delete dir="${basedir}/lib/hub-query-parser"/>
-        <mkdir dir="${basedir}/lib/hub-query-parser"/>
-        <unzip src="${common.deps.download.dir}/hub-query-parser-${hub.query-parser.version}.zip" dest="${basedir}/lib/hub-query-parser"/>
+        <delete dir="${basedir}/lib/ring-query-assist"/>
+        <mkdir dir="${basedir}/lib/ring-query-assist"/>
+        <copy file="${common.deps.download.dir}/gap-rest-${ring.query-assist.version}.jar" todir="${basedir}/lib/ring-query-assist"/>
+        <copy file="${common.deps.download.dir}/antlr4-runtime.jar" todir="${basedir}/lib/ring-query-assist"/>
+        <rename src="${basedir}/lib/ring-query-assist/gap-rest-${ring.query-assist.version}.jar" dest="${basedir}/lib/ring-query-assist/ring.gap.jar"/>
       </actions>
     </execute_on_changed>
 
@@ -262,16 +269,24 @@
         artifact.build.type="${hub.licensing.buildTypeId}"
         artifact.name="hub-licensing.zip"
         file="${common.deps.download.dir}/hub-licensing-${hub.licensing.version}.zip"/>
+    <download.and.pin
+        artifact.build.number="${hub.licensing.version}"
+        artifact.build.type="${hub.licensing.buildTypeId}"
+        artifact.name="mps-closures.zip"
+        file="${common.deps.download.dir}/mps-closures-${hub.licensing.version}.zip"/>
     <execute_on_changed id="hub-licensing">
       <input>
         <pathelement path="${common.deps.download.dir}/hub-licensing-${hub.licensing.version}.zip"/>
+        <pathelement path="${common.deps.download.dir}/mps-closures-${hub.licensing.version}.zip"/>
         <pathelement path="${basedir}/lib/hub-licensing/jetbrains.teamsys.license.runtime.jar"/>
+        <pathelement path="${basedir}/lib/hub-licensing/mps-closures.jar"/>
       </input>
 
       <actions>
         <delete dir="${basedir}/lib/hub-licensing"/>
         <mkdir dir="${basedir}/lib/hub-licensing"/>
         <unzip src="${common.deps.download.dir}/hub-licensing-${hub.licensing.version}.zip" dest="${basedir}/lib/hub-licensing"/>
+        <unzip src="${common.deps.download.dir}/mps-closures-${hub.licensing.version}.zip" dest="${basedir}/lib/hub-licensing"/>
       </actions>
     </execute_on_changed>
 
@@ -1068,7 +1083,7 @@
       <matches pattern="[0-9]+\.[0-9]+\.[0-9]+" string="${upsource.build.number}"/>
       <then>
         <echo message="upsource.build.number: buildserver format"/>
-        <propertyregex property="upsource.version.minor.major"
+        <propertyregex property="upsource.version.major.minor"
                        input="${upsource.build.number}"
                        regexp="(.*)\.(.*)\.(.*)$"
                        select="\1.\2"/>
@@ -1083,7 +1098,7 @@
           <then>
             <echo message="upsource.build.number: local build"/>
 
-            <property name="upsource.version.minor.major" value="0.1" />
+            <property name="upsource.version.major.minor" value="0.1" />
             <property name="upsource.version.build" value="0" />
           </then>
           <else>
@@ -1093,7 +1108,7 @@
       </else>
     </if>
 
-    <echo message="upsource.version.minor.major: ${upsource.version.minor.major}"/>
+    <echo message="upsource.version.major.minor: ${upsource.version.major.minor}"/>
     <echo message="upsource.version.build: ${upsource.version.build}"/>
   </target>
 
@@ -1118,8 +1133,11 @@
     <substitute.version.in.descriptor/>
   </target>
 
-  <target name="patch.frontend.service.artifact">
+  <target name="patch.frontend.service.artifact" depends="parse.build.number">
     <substitute.version.in.descriptor/>
+    <substitute.version.in.descriptor
+        version.token="@major.minor.version@"
+        version.value="${upsource.version.major.minor}"/>
   </target>
 
   <target name="patch.cassandra.service.artifact">
@@ -1359,7 +1377,7 @@
       <entry  key="disable.adminService" value="true"/>
       <!--<entry  key="disable.startingPage" value="true"/>-->
       <entry  key="bundle.product.name" value="Upsource"/>
-      <entry  key="bundle.product.version" value="${upsource.version.minor.major}"/>
+      <entry  key="bundle.product.version" value="${upsource.version.major.minor}"/>
       <entry  key="bundle.product.build" value="${upsource.version.build}"/>
       <!--<entry  key="bundle.product.presentation_name" value="Non-default product name might be set in this property"/>-->
     </propertyfile>
