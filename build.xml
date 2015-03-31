@@ -891,33 +891,6 @@
     </java>
   </target>
 
-  <target name="write.source.root.path">
-    <local name="escaped"/>
-    <do_escape toescape="${basedir}" property="escaped"/>
-
-    <echo file="${basedir}/out/SourceRootPath.java" append="false">
-      package com.jetbrains.upsource;
-
-      public class SourceRootPath {
-      public static final String PATH = "${escaped}";
-      }
-    </echo>
-
-    <if>
-      <not>
-        <filesmatch file1="${basedir}/out/SourceRootPath.java"
-                    file2="${basedir}/frontend/frontend-monitoring/src_generated/com/jetbrains/upsource/SourceRootPath.java"/>
-      </not>
-      <then>
-        <echo message="Writing SourceRootPath.java" />
-
-        <copy file="${basedir}/out/SourceRootPath.java"
-              tofile="${basedir}/frontend/frontend-monitoring/src_generated/com/jetbrains/upsource/SourceRootPath.java"
-              overwrite="true"/>
-      </then>
-    </if>
-  </target>
-
   <target name="db-version.force.update">
     <touch file="${basedir}/backend/src/com/jetbrains/upsource/backend/cli/DBVersionGenerator.java" />
     <antcall target="db-version.update" />
@@ -974,7 +947,7 @@
   </target>
 
   <target name="prepare"
-          depends="write-build-number,patch-frontend,fetch.dependencies,fetch.installer.dependencies,make.gwt.sourcemaps.lib,generate-model,populate-idea-utils,make.sass,make.js,make.html,write.source.root.path">
+          depends="write-build-number,patch-frontend,fetch.dependencies,fetch.installer.dependencies,make.gwt.sourcemaps.lib,generate-model,populate-idea-utils,make.sass,make.js,make.html">
     <!-- Make tmp dir for various run configurations in IDEA -->
     <mkdir dir="${basedir}/tmp/java"/>
 
@@ -1510,6 +1483,10 @@
     </zip>
 
     <echo message="##teamcity[publishArtifacts '${init-upsource-for-functional-tests.zip}']"/>
+  </target>
+
+  <target name="publish.rpm">
+    <antcall target="rpm.publish.rpm" />
   </target>
 
   <target name="make-deploy.zip">
