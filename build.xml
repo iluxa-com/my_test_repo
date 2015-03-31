@@ -571,7 +571,7 @@
 
       <actions>
         <!-- Clear modules and caches on npm or nodejs update -->
-        <delete dir="${dep.ring-ui-2.root}/node_modules" />
+        <delete dir="${frontend.root}/node_modules" />
 
         <delete dir="${npm.cache.dir}" />
         <mkdir dir="${npm.cache.dir}" />
@@ -582,19 +582,19 @@
       <input>
         <pathelement path="${nodejs.bin}"/>
         <pathelement path="${npm.dir}/CHANGELOG.md"/>
-        <pathelement path="${dep.ring-ui-2.root}/package.json"/>
-        <pathelement path="${dep.ring-ui-2.root}/.npmrc"/>
+        <pathelement path="${frontend.root}/package.json"/>
+        <pathelement path="${frontend.root}/.npmrc"/>
       </input>
 
       <actions>
-        <call.npm args="install" dir="${dep.ring-ui-2.root}" />
+        <call.npm args="install" dir="${frontend.root}" />
       </actions>
     </execute_on_changed>
 
     <local name="output.js" />
     <local name="output.css" />
-    <property name="output.js" value="${dep.ring-ui-2.root}/ring-2.0/ring.min.js" />
-    <property name="output.css" value="${dep.ring-ui-2.root}/css/ring.min.css" />
+    <property name="output.js" value="${frontend.root}/ring-2.0/ring.min.js" />
+    <property name="output.css" value="${frontend.root}/css/ring.min.css" />
 
     <execute_on_changed id="node-webpack-build">
       <input>
@@ -603,11 +603,11 @@
         <pathelement path="${npm.dir}/CHANGELOG.md"/>
 
         <!-- Depend on inputs -->
-        <pathelement path="${dep.ring-ui-2.root}/scripts/ring-upsource.js"/>
-        <pathelement path="${dep.ring-ui-2.root}/scripts/bundle.scss"/>
-        <pathelement path="${dep.ring-ui-2.root}/package.json"/>
-        <pathelement path="${dep.ring-ui-2.root}/webpack.config.js"/>
-        <pathelement path="${dep.ring-ui-2.root}/.npmrc"/>
+        <pathelement path="${frontend.root}/scripts/ring-upsource.js"/>
+        <pathelement path="${frontend.root}/scripts/bundle.scss"/>
+        <pathelement path="${frontend.root}/package.json"/>
+        <pathelement path="${frontend.root}/webpack.config.js"/>
+        <pathelement path="${frontend.root}/.npmrc"/>
 
         <!-- Depend on outputs -->
         <pathelement path="${output.js}"/>
@@ -618,7 +618,7 @@
         <delete file="${output.js}" />
         <delete file="${output.css}" />
 
-        <call.node args="node_modules/webpack/bin/webpack.js" dir="${dep.ring-ui-2.root}" />
+        <call.node args="node_modules/webpack/bin/webpack.js" dir="${frontend.root}" />
 
         <fail message="No output ${output.js} from webpack">
           <condition>
