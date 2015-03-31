@@ -215,55 +215,6 @@
       </actions>
     </execute_on_changed>
 
-    <execute_on_changed id="npm-clear-modules">
-      <input>
-        <pathelement path="${nodejs.bin}"/>
-        <pathelement path="${npm.dir}/CHANGELOG.md"/>
-      </input>
-
-      <actions>
-        <!-- Clear modules and caches on npm or nodejs update -->
-        <delete dir="${dep.ring-ui-2.root}/node_modules" />
-        <delete dir="${npm.cache.dir}" />
-      </actions>
-    </execute_on_changed>
-
-    <execute_on_changed id="npm-install">
-      <input>
-        <pathelement path="${nodejs.bin}"/>
-        <pathelement path="${npm.dir}/CHANGELOG.md"/>
-        <pathelement path="${dep.ring-ui-2.root}/package.json"/>
-        <pathelement path="${dep.ring-ui-2.root}/.npmrc"/>
-      </input>
-
-      <actions>
-        <call.npm args="install" dir="${dep.ring-ui-2.root}" />
-      </actions>
-    </execute_on_changed>
-
-    <execute_on_changed id="node-webpack-build">
-      <input>
-        <!-- Depend on nodejs & npm versions -->
-        <pathelement path="${nodejs.bin}"/>
-        <pathelement path="${npm.dir}/CHANGELOG.md"/>
-
-        <!-- Depend on inputs -->
-        <pathelement path="${dep.ring-ui-2.root}/scripts/ring-upsource.js"/>
-        <pathelement path="${dep.ring-ui-2.root}/scripts/bundle.scss"/>
-        <pathelement path="${dep.ring-ui-2.root}/package.json"/>
-        <pathelement path="${dep.ring-ui-2.root}/webpack.config.js"/>
-        <pathelement path="${dep.ring-ui-2.root}/.npmrc"/>
-
-        <!-- Depend on outputs -->
-        <pathelement path="${dep.ring-ui-2.root}/ring-2.0/ring.min.js"/>
-        <pathelement path="${dep.ring-ui-2.root}/css/ring.min.css"/>
-      </input>
-
-      <actions>
-        <call.node args="node_modules/webpack/bin/webpack.js" dir="${dep.ring-ui-2.root}" />
-      </actions>
-    </execute_on_changed>
-
     <!-- hub client -->
     <download.and.pin
         artifact.build.number="${hub.client.version}"
@@ -611,8 +562,57 @@
     </execute_on_changed>
   </target>
 
-  <target name="test.node" depends="fetch.nodejs.sdk">
-    <call.npm args="config get cache" dir="${basedir}" />
+  <target name="make.frontend" depends="fetch.nodejs.sdk">
+    <execute_on_changed id="npm-clear-modules">
+      <input>
+        <pathelement path="${nodejs.bin}"/>
+        <pathelement path="${npm.dir}/CHANGELOG.md"/>
+      </input>
+
+      <actions>
+        <!-- Clear modules and caches on npm or nodejs update -->
+        <delete dir="${dep.ring-ui-2.root}/node_modules" />
+
+        <delete dir="${npm.cache.dir}" />
+        <mkdir dir="${npm.cache.dir}" />
+      </actions>
+    </execute_on_changed>
+
+    <execute_on_changed id="npm-install">
+      <input>
+        <pathelement path="${nodejs.bin}"/>
+        <pathelement path="${npm.dir}/CHANGELOG.md"/>
+        <pathelement path="${dep.ring-ui-2.root}/package.json"/>
+        <pathelement path="${dep.ring-ui-2.root}/.npmrc"/>
+      </input>
+
+      <actions>
+        <call.npm args="install" dir="${dep.ring-ui-2.root}" />
+      </actions>
+    </execute_on_changed>
+
+    <execute_on_changed id="node-webpack-build">
+      <input>
+        <!-- Depend on nodejs & npm versions -->
+        <pathelement path="${nodejs.bin}"/>
+        <pathelement path="${npm.dir}/CHANGELOG.md"/>
+
+        <!-- Depend on inputs -->
+        <pathelement path="${dep.ring-ui-2.root}/scripts/ring-upsource.js"/>
+        <pathelement path="${dep.ring-ui-2.root}/scripts/bundle.scss"/>
+        <pathelement path="${dep.ring-ui-2.root}/package.json"/>
+        <pathelement path="${dep.ring-ui-2.root}/webpack.config.js"/>
+        <pathelement path="${dep.ring-ui-2.root}/.npmrc"/>
+
+        <!-- Depend on outputs -->
+        <pathelement path="${dep.ring-ui-2.root}/ring-2.0/ring.min.js"/>
+        <pathelement path="${dep.ring-ui-2.root}/css/ring.min.css"/>
+      </input>
+
+      <actions>
+        <call.node args="node_modules/webpack/bin/webpack.js" dir="${dep.ring-ui-2.root}" />
+      </actions>
+    </execute_on_changed>
   </target>
 
   <macrodef name="fetch.idea.for.plugin.macro">
@@ -989,7 +989,7 @@
   </target>
 
   <target name="prepare"
-          depends="write-build-number,patch-frontend,fetch.dependencies,fetch.installer.dependencies,make.gwt.sourcemaps.lib,generate-model,populate-idea-utils,make.sass,make.js,make.html">
+          depends="write-build-number,patch-frontend,fetch.dependencies,make.frontend,fetch.installer.dependencies,make.gwt.sourcemaps.lib,generate-model,populate-idea-utils,make.sass,make.js,make.html">
     <!-- Make tmp dir for various run configurations in IDEA -->
     <mkdir dir="${basedir}/tmp/java"/>
 
